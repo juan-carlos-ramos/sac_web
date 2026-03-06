@@ -1,0 +1,61 @@
+{% extends 'nucleo/base.html' %}
+
+{% block title %}Proveedores - {{ nombre_sistema }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-between align-center">
+        <h2>Gestión de Proveedores</h2>
+        {% if perms.nucleo.add_proveedor %}
+        <a href="{% url 'nucleo:crear_proveedor' %}" class="btn btn-crear">+ Crear Proveedor</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if proveedores %}
+        <table class="tabla-principal">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>RIF</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th class="text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for proveedor in proveedores %}
+                <tr>
+                    <td><strong>{{ proveedor.nombre }}</strong></td>
+                    <td>{{ proveedor.rif }}</td>
+                    <td>{{ proveedor.telefono|default:"N/A" }}</td>
+                    <td>{{ proveedor.email|default:"N/A" }}</td>
+                    <td class="acciones">
+                        {% if perms.nucleo.change_proveedor %}
+                        <a href="{% url 'nucleo:editar_proveedor' proveedor.id %}"
+                            class="btn btn-editar btn-sm">Editar</a>
+                        {% endif %}
+                        
+                        {% if perms.nucleo.delete_proveedor %}
+                        <a href="{% url 'nucleo:eliminar_proveedor' proveedor.id %}" class="btn btn-borrar btn-sm"
+                            onclick="return confirm('¿Está seguro de eliminar el proveedor {{ proveedor.nombre }}?')">
+                            Eliminar
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align: center; padding: 60px 20px; color: var(--gray);">
+            <h3 style="font-size: 48px; margin-bottom: 10px;">📋</h3>
+            <h3 style="margin-bottom: 10px;">No hay proveedores registrados</h3>
+            <p>Comienza agregando el primer proveedor</p>
+            {% if perms.nucleo.add_proveedor %}
+            <a href="{% url 'nucleo:crear_proveedor' %}" class="btn btn-crear mt-2">+ Crear Primer Proveedor</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

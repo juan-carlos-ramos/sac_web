@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Inmuebles - SAC WEB</title>
+    <style>
+        /* =================================================================
+           ESTILOS PARA PDF SIMPLE
+           NO usar Google Fonts ni recursos externos
+           ================================================================= */
+
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12pt;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #2c5f8d;
+        }
+
+        .header h1 {
+            color: #1e3a5f;
+            font-size: 24pt;
+            margin: 0 0 10px 0;
+        }
+
+        .header p {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .info-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #2c5f8d;
+        }
+
+        .info-section h2 {
+            color: #1e3a5f;
+            font-size: 16pt;
+            margin: 0 0 10px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table thead {
+            background: #2c5f8d;
+            color: white;
+        }
+
+        table th {
+            padding: 10px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .totales {
+            margin-top: 30px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+
+        .totales p {
+            margin: 5px 0;
+            font-size: 14pt;
+        }
+
+        .totales strong {
+            color: #1e3a5f;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 2px solid #dee2e6;
+            text-align: center;
+            font-size: 10pt;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ENCABEZADO -->
+    <div class="header">
+        <h1>SAC WEB</h1>
+        <p>Sistema de Administración de Condominio</p>
+        <p><strong>Reporte de Inmuebles</strong></p>
+        <p>Generado el: {{ fecha_generacion|date:"d/m/Y H:i" }}</p>
+    </div>
+
+    <!-- INFORMACIÓN DEL REPORTE -->
+    <div class="info-section">
+        <h2>Resumen</h2>
+        <p><strong>Total de inmuebles:</strong> {{ total_inmuebles }}</p>
+        <p><strong>Suma de alícuotas:</strong> {{ suma_alicuotas|floatformat:4 }}</p>
+        <p><strong>Estado de alícuotas:</strong>
+            {% if validacion_alicuotas %}
+            ✓ Válido
+            {% else %}
+            ⚠ Requiere revisión
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- TABLA DE INMUEBLES -->
+    <table>
+        <thead>
+            <tr>
+                <th>Número</th>
+                <th>Propietario</th>
+                <th>Alícuota</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inmueble in inmuebles %}
+            <tr>
+                <td><strong>{{ inmueble.numero_apto }}</strong></td>
+                <td>{{ inmueble.propietario|default:"Sin asignar" }}</td>
+                <td>{{ inmueble.alicuota|default:"N/A" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- TOTALES -->
+    <div class="totales">
+        <p><strong>Total de inmuebles registrados:</strong> {{ total_inmuebles }}</p>
+        <p><strong>Inmuebles con alícuota asignada:</strong> {{ inmuebles_con_alicuota }}</p>
+        <p><strong>Inmuebles sin alícuota:</strong> {{ inmuebles_sin_alicuota }}</p>
+    </div>
+
+    <!-- PIE DE PÁGINA -->
+    <div class="footer">
+        <p>&copy; 2026 SAC WEB - Sistema de Administración de Condominio</p>
+        <p>Este es un documento administrativo interno</p>
+    </div>
+</body>
+
+</html>

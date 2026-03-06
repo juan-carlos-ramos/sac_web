@@ -1,0 +1,225 @@
+{% extends 'nucleo/base.html' %}
+
+{% block title %}Dashboard - {{ nombre_sistema }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>Panel de Control</h2>
+    </div>
+    <div class="card-body">
+        <!-- WIDGET TASA DE CAMBIO -->
+        <div style="display: inline-flex; align-items: center; gap: 15px; background: linear-gradient(120deg, #e3f2fd 0%, #bbdefb 100%); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow-sm);">
+            <!-- Icono -->
+            <div style="background: var(--primary); width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); flex-shrink: 0;">
+                <span style="font-size: 20px;">💵</span>
+            </div>
+
+            <!-- Info -->
+            <div>
+                <h3 style="margin: 0; font-size: 0.9rem; color: var(--primary-dark); font-weight: 700;">Tasa Oficial BCV</h3>
+                <p style="margin: 0; color: var(--primary); font-size: 0.85rem;">
+                    Hoy: <strong>Bs. {{ tasa_cambio_dolar|floatformat:2 }}</strong>
+                </p>
+            </div>
+
+            <!-- Formulario compacto -->
+            <form action="{% url 'nucleo:actualizar_tasa_dolar' %}" method="post" style="display: flex; align-items: center; gap: 10px; background: white; padding: 6px 12px; border-radius: 8px; box-shadow: var(--shadow-sm);">
+                {% csrf_token %}
+                <input type="number" step="0.01" name="tasa_cambio" value="{{ tasa_cambio_dolar|floatformat:2 }}" 
+                       style="width: 90px; padding: 6px 8px; border: 1px solid var(--gray-light); border-radius: 6px; font-size: 0.95rem; font-weight: bold; color: var(--primary-dark); text-align: center;" required>
+                <button type="submit" class="btn btn-crear" style="padding: 6px 14px; font-size: 0.85rem; border-radius: 6px;">
+                    Actualizar
+                </button>
+            </form>
+        </div>
+
+        <!-- Estadísticas -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px;">
+            <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); 
+                        color: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow-md);">
+                <h3 style="font-size: 13px; margin-bottom: 8px; opacity: 0.9;">Total Inmuebles</h3>
+                <p style="font-size: 32px; font-weight: 600; margin: 0;">{{ total_inmuebles }}</p>
+            </div>
+
+            <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); 
+                        color: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow-md);">
+                <h3 style="font-size: 13px; margin-bottom: 8px; opacity: 0.9;">Total Facturas</h3>
+                <p style="font-size: 32px; font-weight: 600; margin: 0;">{{ total_facturas }}</p>
+            </div>
+
+            <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); 
+                        color: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow-md);">
+                <h3 style="font-size: 13px; margin-bottom: 8px; opacity: 0.9;">Total Recaudado</h3>
+                <p style="font-size: 28px; font-weight: 600; margin: 0;">Bs {{ total_recaudado|floatformat:2 }}</p>
+            </div>
+
+            {% if deuda_pendiente > 0 %}
+            <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); 
+                        color: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow-md);">
+                <h3 style="font-size: 13px; margin-bottom: 8px; opacity: 0.9;">⚠️ Deuda Pendiente</h3>
+                <p style="font-size: 28px; font-weight: 600; margin: 0;">Bs {{ deuda_pendiente|floatformat:2 }}</p>
+            </div>
+            {% elif deuda_pendiente < 0 %}
+            <div style="background: linear-gradient(135deg, #28a745 0%, #218838 100%); 
+                        color: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow-md);">
+                <h3 style="font-size: 13px; margin-bottom: 8px; opacity: 0.9;">✅ Saldo a Favor</h3>
+                <p style="font-size: 28px; font-weight: 600; margin: 0;">Bs {{ deuda_pendiente|floatformat:2|slice:"1:" }}</p>
+            </div>
+            {% else %}
+            <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); 
+                        color: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow-md);">
+                <h3 style="font-size: 13px; margin-bottom: 8px; opacity: 0.9;">Balance</h3>
+                <p style="font-size: 28px; font-weight: 600; margin: 0;">Bs 0.00</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Advertencia de alícuotas -->
+        {% if not validacion_alicuotas.es_valida %}
+        <div class="alert alert-warning">
+            <strong>⚠️ Advertencia:</strong> {{ validacion_alicuotas.advertencias.0 }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- GRÁFICOS ESTADÍSTICOS (2 COLUMNAS) -->
+<!-- ========================================================================= -->
+<div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-top: 20px;">
+    <!-- Gráfico 1: Evolución de Pagos (más ancho) -->
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-header" style="padding: 15px 20px;">
+            <h3 style="margin: 0; font-size: 1rem; color: var(--text);">📈 Evolución de Pagos (Últimos 6 Meses)</h3>
+        </div>
+        <div class="card-body" style="padding: 15px 20px;">
+            <div style="height: 280px;">
+                <canvas id="chartPagos"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico 2: Top Deudas (más angosto) -->
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-header" style="padding: 15px 20px;">
+            <h3 style="margin: 0; font-size: 1rem; color: var(--text);">📊 Top Deudas por Inmueble</h3>
+        </div>
+        <div class="card-body" style="padding: 15px 20px;">
+            <div style="height: 280px;">
+                <canvas id="chartDeudas"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// =========================================================================
+// CONFIGURACIÓN DE GRÁFICOS CON CHART.JS
+// =========================================================================
+
+// Colores corporativos
+const colors = {
+    primary: '#2c5f8d',
+    primaryLight: '#4a90e2',
+    success: '#28a745',
+    danger: '#dc3545',
+    warning: '#e5b80b',
+    gray: '#6c757d',
+};
+
+// GRÁFICO 1: Evolución de Pagos
+const chartPagosCtx = document.getElementById('chartPagos');
+if (chartPagosCtx) {
+    new Chart(chartPagosCtx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_pagos_labels|safe|default:"[]" }},
+            datasets: [{
+                label: 'Recaudación (Bs)',
+                data: {{ chart_pagos_data|safe|default:"[]" }},
+                borderColor: colors.primary,
+                backgroundColor: colors.primary + '20',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Bs ' + context.parsed.y.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'Bs ' + value.toLocaleString('es-VE');
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// GRÁFICO 2: Deuda por Inmueble
+const chartDeudasCtx = document.getElementById('chartDeudas');
+if (chartDeudasCtx) {
+    const deudasData = {{ chart_deudas_data|safe|default:"[]" }};
+    new Chart(chartDeudasCtx, {
+        type: 'bar',
+        data: {
+            labels: deudasData.map(d => d.nombre),
+            datasets: [{
+                label: 'Deuda (Bs)',
+                data: deudasData.map(d => d.deuda),
+                backgroundColor: colors.danger,
+                borderColor: colors.danger,
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Bs ' + context.parsed.x.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'Bs ' + value.toLocaleString('es-VE');
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

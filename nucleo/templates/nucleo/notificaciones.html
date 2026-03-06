@@ -1,0 +1,60 @@
+{% extends 'nucleo/base.html' %}
+
+{% block title %}Notificaciones - {{ nombre_sistema }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-between align-center">
+        <h2>Mis Notificaciones</h2>
+        <div class="d-flex gap-1">
+            {% if notificaciones %}
+            <a href="{% url 'nucleo:marcar_todas_leidas' %}" class="btn btn-success">
+                ✓ Marcar todas como leídas
+            </a>
+            {% endif %}
+            <a href="{% url 'nucleo:dashboard' %}" class="btn btn-volver">
+                ← Volver
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if notificaciones %}
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            {% for notificacion in notificaciones %}
+            <div style="background: {% if not notificacion.leida %}#f9f9ff{% else %}white{% endif %}; 
+                            border-left: 4px solid {% if not notificacion.leida %}var(--primary){% else %}var(--gray-light){% endif %}; 
+                            padding: 20px; 
+                            border-radius: 8px;
+                            box-shadow: var(--shadow-sm);
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;">
+                <div>
+                    <h3 style="color: var(--gray-dark); margin-bottom: 5px; font-size: 16px;">
+                        {{ notificacion.actividad.get_accion_display }}: {{ notificacion.actividad.modelo }}
+                    </h3>
+                    <p style="color: var(--gray); font-size: 14px; margin-bottom: 5px;">
+                        {{ notificacion.actividad.descripcion }}
+                    </p>
+                    <span style="color: var(--gray); font-size: 12px;">
+                        {{ notificacion.fecha_creacion|date:"d/m/Y H:i" }}
+                    </span>
+                </div>
+                {% if not notificacion.leida %}
+                <a href="{% url 'nucleo:marcar_notificacion_leida' notificacion.id %}" class="btn btn-success btn-sm">
+                    Marcar como leída
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 60px 20px; color: var(--gray);">
+            <h3 style="font-size: 48px; margin-bottom: 10px;">📭</h3>
+            <h3 style="margin-bottom: 10px;">No tienes notificaciones</h3>
+            <p>Cuando ocurran eventos en el sistema, aparecerán aquí</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

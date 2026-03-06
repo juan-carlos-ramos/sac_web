@@ -1,0 +1,47 @@
+{% extends 'nucleo/base.html' %}
+
+{% block title %}{{ titulo }} - {{ nombre_sistema }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header d-flex justify-between align-center">
+        <h2>{{ titulo }}</h2>
+        <a href="{% url 'nucleo:lista_proveedores' %}" class="btn btn-volver">← Volver</a>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.nombre.id_for_label }}">{{ form.nombre.label }}</label>
+                {{ form.nombre }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.rif.id_for_label }}">{{ form.rif.label }}</label>
+                {{ form.rif }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>
+                {{ form.telefono }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                {{ form.email }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.direccion.id_for_label }}">{{ form.direccion.label }}</label>
+                {{ form.direccion }}
+            </div>
+
+            <div class="d-flex gap-1">
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <a href="{% url 'nucleo:lista_proveedores' %}" class="btn btn-volver">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ nombre_sistema }}{% endblock %}</title>
+
+    <!-- CSS Global -->
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+
+    <!-- CSS adicional por página -->
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- ========================================================================
+         NAVBAR / HEADER
+         ======================================================================== -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <h1>{{ nombre_sistema }}</h1>
+            <span class="badge-sistema">ADMIN</span>
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="navbar-menu">
+            <a href="{% url 'nucleo:dashboard' %}">🏠 Inicio</a>
+            <a href="{% url 'nucleo:lista_inmuebles' %}">🏢 Inmuebles</a>
+            <a href="{% url 'nucleo:lista_facturas' %}">💰 Facturas</a>
+            <a href="{% url 'nucleo:lista_pagos' %}">💳 Pagos</a>
+            <a href="{% url 'nucleo:lista_proveedores' %}">📋 Proveedores</a>
+            {% if user.is_staff %}
+            <a href="{% url 'nucleo:vista_auditoria' %}">📊 Auditoría</a>
+            <a href="{% url 'nucleo:lista_usuarios' %}">👥 Usuarios</a>
+            {% endif %}
+        </div>
+
+        <div class="navbar-user">
+            <div class="notificaciones-badge">
+                <a href="{% url 'nucleo:notificaciones' %}">
+                    🔔 Notificaciones
+                    {% if cantidad_notificaciones > 0 %}
+                    <span class="badge">{{ cantidad_notificaciones }}</span>
+                    {% endif %}
+                </a>
+            </div>
+            <span>👤 {{ user.username }}</span>
+            <a href="{% url 'nucleo:cambiar_password' %}">🔑 Cambiar Contraseña</a>
+            <a href="{% url 'nucleo:logout' %}">🚪 Salir</a>
+        </div>
+        {% endif %}
+    </nav>
+
+    <!-- ========================================================================
+         MENSAJES DEL SISTEMA (Auto-dismiss)
+         ======================================================================== -->
+    {% if messages %}
+    <div class="container">
+        <div class="messages" id="system-messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} auto-dismiss">
+                {{ message }}
+                <span class="alert-close" onclick="this.parentElement.remove()">&times;</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <style>
+        .alert {
+            position: relative;
+            padding-right: 35px;
+            animation: slideDown 0.3s ease;
+        }
+        .alert-close {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .alert-close:hover {
+            opacity: 1;
+        }
+        .alert.fade-out {
+            animation: fadeOutUp 0.5s ease forwards;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOutUp {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+    </style>
+    <script>
+        // Auto-dismiss notifications after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert.auto-dismiss');
+            alerts.forEach(function(alert, index) {
+                setTimeout(function() {
+                    alert.classList.add('fade-out');
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 500);
+                }, 5000 + (index * 500)); // 5 seconds + stagger for multiple
+            });
+        });
+    </script>
+    {% endif %}
+
+    <!-- ========================================================================
+         CONTENIDO PRINCIPAL
+         ======================================================================== -->
+    <div class="container">
+        {% block content %}
+        <!-- El contenido de cada página va aquí -->
+        {% endblock %}
+    </div>
+
+    <!-- ========================================================================
+         FOOTER (OPCIONAL)
+         ======================================================================== -->
+    <footer style="text-align: center; padding: 20px; color: var(--gray); margin-top: 40px;">
+        <p>&copy; 2026 {{ nombre_sistema }} - {{ nombre_completo }}</p>
+    </footer>
+
+    <!-- JavaScript adicional por página -->
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

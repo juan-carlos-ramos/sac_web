@@ -1,0 +1,181 @@
+{% extends 'nucleo/base.html' %}
+
+{% block title %}{{ titulo }} - {{ nombre_sistema }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header d-flex justify-between align-center">
+        <h2>{{ titulo }}</h2>
+        <a href="{% url 'nucleo:lista_usuarios' %}" class="btn btn-volver">← Volver</a>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+                {{ form.username }}
+                {% if form.username.help_text %}
+                <small>{{ form.username.help_text }}</small>
+                {% endif %}
+                {% if form.username.errors %}
+                <div class="alert alert-error mt-1">{{ form.username.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                <div class="alert alert-error mt-1">{{ form.first_name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                <div class="alert alert-error mt-1">{{ form.last_name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                <div class="alert alert-error mt-1">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+
+            {% if es_creacion %}
+            <div class="form-group">
+                <label for="{{ form.password1.id_for_label }}">{{ form.password1.label }}</label>
+                <div style="position: relative;">
+                    {{ form.password1 }}
+                    <span class="password-toggle" onclick="toggleField(this, '{{ form.password1.id_for_label }}')" style="cursor: pointer; position: absolute; right: 25px; top: 10px; z-index: 100;">👁️</span>
+                </div>
+                {% if form.password1.errors %}
+                <div class="alert alert-error mt-1">{{ form.password1.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password2.id_for_label }}">{{ form.password2.label }}</label>
+                <div style="position: relative;">
+                    {{ form.password2 }}
+                    <span class="password-toggle" onclick="toggleField(this, '{{ form.password2.id_for_label }}')" style="cursor: pointer; position: absolute; right: 25px; top: 10px; z-index: 100;">👁️</span>
+                </div>
+                {% if form.password2.errors %}
+                <div class="alert alert-error mt-1">{{ form.password2.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.pregunta_seguridad.id_for_label }}">{{ form.pregunta_seguridad.label }}</label>
+                {{ form.pregunta_seguridad }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.respuesta_seguridad.id_for_label }}">{{ form.respuesta_seguridad.label }}</label>
+                <div style="position: relative;">
+                    {{ form.respuesta_seguridad }}
+                    <span class="password-toggle" onclick="toggleField(this, '{{ form.respuesta_seguridad.id_for_label }}')" style="cursor: pointer; position: absolute; right: 25px; top: 10px; z-index: 100;">👁️</span>
+                </div>
+                {% if form.respuesta_seguridad.errors %}
+                <div class="alert alert-error mt-1">{{ form.respuesta_seguridad.errors }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <style>
+                /* Estilos específicos para corregir los checkboxes de este formulario */
+                .form-check-input {
+                    width: auto !important; /* Fuerza a que no ocupen el 100% */
+                    margin-right: 10px;
+                    margin-top: 0;
+                    cursor: pointer;
+                }
+                
+                /* Estilos para la lista de grupos (Roles) */
+                #id_groups {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                }
+                
+                #id_groups li {
+                    margin-bottom: 8px;
+                }
+                
+                #id_groups label {
+                    display: flex !important;
+                    align-items: center;
+                    cursor: pointer;
+                    margin: 0;
+                    font-weight: normal;
+                }
+                
+                #id_groups input[type="checkbox"] {
+                    width: auto !important;
+                    margin-right: 10px;
+                    transform: scale(1.1);
+                }
+            </style>
+
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+                <h4 style="margin-bottom: 15px; font-size: 16px; color: #555;">Permisos y Roles</h4>
+                
+                {% if form.is_active %}
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                    {{ form.is_active }}
+                    <div>
+                        <label for="{{ form.is_active.id_for_label }}" style="margin: 0;">{{ form.is_active.label }}</label>
+                        <small style="display:block; color:#888;">{{ form.is_active.help_text }}</small>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if form.is_staff %}
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                    {{ form.is_staff }}
+                    <div>
+                        <label for="{{ form.is_staff.id_for_label }}" style="margin: 0;">{{ form.is_staff.label }}</label>
+                        <small style="display:block; color:#888;">{{ form.is_staff.help_text }}</small>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">{{ form.groups.label }}</label>
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                        {{ form.groups }}
+                    </div>
+                    <small style="display:block; color:#888; margin-top: 5px;">Selecciona el grupo de permisos para este usuario.</small>
+                </div>
+            </div>
+
+            <div class="d-flex gap-1" style="margin-top: 20px;">
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <a href="{% url 'nucleo:lista_usuarios' %}" class="btn btn-volver">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function toggleField(element, fieldId) {
+    const field = document.getElementById(fieldId);
+    if (field) {
+        if (field.type === 'password') {
+            field.type = 'text';
+            element.textContent = '🙈';
+        } else {
+            field.type = 'password';
+            element.textContent = '👁️';
+        }
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

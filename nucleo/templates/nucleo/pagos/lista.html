@@ -1,0 +1,97 @@
+{% extends 'nucleo/base.html' %}
+{% load nucleo_tags %}
+
+{% block title %}Pagos - {{ nombre_sistema }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-between align-center">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <h2 style="margin: 0;">Gestión de Pagos</h2>
+            {% if pagos %}
+            <input type="text" id="buscar-pago" 
+                   placeholder="🔍 Buscar..." 
+                   autocomplete="off"
+                   style="width: 200px; padding: 8px 12px; border: 1px solid var(--gray-light); border-radius: 6px; font-size: 0.9rem;">
+            {% endif %}
+        </div>
+        {% if perms.nucleo.add_pago %}
+        <a href="{% url 'nucleo:registrar_pago' %}" class="btn btn-crear">+ Registrar Pagos</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if pagos %}
+        <table class="tabla-principal" id="tabla-pagos">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Inmueble</th>
+                    <th>Factura</th>
+                    <th>Monto</th>
+                    <th>Moneda</th>
+                    <th>Método</th>
+                    <th>Referencia</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pago in pagos %}
+                <tr>
+                    <td>{{ pago.fecha_pago|date:"d/m/Y" }}</td>
+                    <td><strong>{{ pago.inmueble.numero_apto }}</strong></td>
+                    <td>{{ pago.factura.periodo }}</td>
+                    <td><strong>{{ pago.monto_pagado|formato_moneda }}</strong></td>
+                    <td>{{ pago.get_moneda_display }}</td>
+                    <td>{{ pago.get_metodo_pago_display }}</td>
+                    <td>{{ pago.referencia|default:"N/A" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align: center; padding: 60px 20px; color: var(--gray);">
+            <h3 style="font-size: 48px; margin-bottom: 10px;">💳</h3>
+            <h3 style="margin-bottom: 10px;">No hay pagos registrados</h3>
+            <p>Comienza registrando el primer pago</p>
+            {% if perms.nucleo.add_pago %}
+            <a href="{% url 'nucleo:registrar_pago' %}" class="btn btn-crear mt-2">+ Registrar Primer Pago</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('buscar-pago');
+    if (searchInput) {
+        // Función para quitar acentos
+        function quitarAcentos(texto) {
+            return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+        
+        searchInput.addEventListener('input', function() {
+            const filtro = quitarAcentos(this.value.toLowerCase().trim());
+            const filas = document.querySelectorAll('#tabla-pagos tbody tr');
+            
+            // Si no hay filtro, mostrar todas
+            if (!filtro) {
+                filas.forEach(fila => fila.style.display = '');
+                return;
+            }
+            
+            // Dividir el filtro en palabras
+            const palabras = filtro.split(/\s+/);
+            
+            filas.forEach(fila => {
+                const texto = quitarAcentos(fila.textContent.toLowerCase());
+                // Verificar que TODAS las palabras estén en la fila
+                const coincide = palabras.every(palabra => texto.includes(palabra));
+                fila.style.display = coincide ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

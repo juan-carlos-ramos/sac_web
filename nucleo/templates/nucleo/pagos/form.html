@@ -1,0 +1,314 @@
+{% extends 'nucleo/base.html' %}
+
+{% block title %}{{ titulo }} - {{ nombre_sistema }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header d-flex justify-between align-center">
+        <h2>{{ titulo }}</h2>
+        <a href="{% url 'nucleo:lista_pagos' %}" class="btn btn-volver">← Volver</a>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.factura.id_for_label }}">{{ form.factura.label }}</label>
+                {{ form.factura }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.inmueble.id_for_label }}">{{ form.inmueble.label }}</label>
+                {{ form.inmueble }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.fecha_pago.id_for_label }}">{{ form.fecha_pago.label }}</label>
+                {{ form.fecha_pago }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.monto_pagado.id_for_label }}">{{ form.monto_pagado.label }}</label>
+                {{ form.monto_pagado }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.moneda.id_for_label }}">{{ form.moneda.label }}</label>
+                {{ form.moneda }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.tasa_cambio.id_for_label }}">{{ form.tasa_cambio.label }}</label>
+                {{ form.tasa_cambio }}
+                {% if form.tasa_cambio.help_text %}
+                <small>{{ form.tasa_cambio.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.metodo_pago.id_for_label }}">{{ form.metodo_pago.label }}</label>
+                {{ form.metodo_pago }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.referencia.id_for_label }}">{{ form.referencia.label }}</label>
+                {{ form.referencia }}
+                {% if form.referencia.help_text %}
+                <small>{{ form.referencia.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.comprobante.id_for_label }}">{{ form.comprobante.label }}</label>
+                {{ form.comprobante }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.notas.id_for_label }}">{{ form.notas.label }}</label>
+                {{ form.notas }}
+            </div>
+
+            <div class="d-flex gap-1">
+                <button type="submit" class="btn btn-success">Registrar Pagos</button>
+                <a href="{% url 'nucleo:lista_pagos' %}" class="btn btn-volver">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    /* Ajuste para que Select2 se vea bien con Bootstrap */
+    .select2-container .select2-selection--single {
+        height: 38px;
+        border: 1px solid #ced4da;
+        padding: 5px;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jQuery (necesario para Select2) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // Inicializar Select2 en los campos de Factura e Inmueble
+        $('#id_factura').select2({
+            placeholder: "Seleccione una factura",
+            allowClear: true,
+            width: '100%'
+        });
+
+        $('#id_inmueble').select2({
+            placeholder: "Buscar por Apto, Nombre o Cédula...",
+            allowClear: true,
+            width: '100%',
+            language: {
+                noResults: function () {
+                    return "No se encontraron resultados";
+                }
+            }
+        });
+        
+        // ==========================================
+        // INFO DEUDA AJAX
+        // ==========================================
+        // Insertar contenedor de info de deuda después del campo inmueble
+        const deudaContainerHtml = `
+            <div id="info-deuda" class="alert alert-info mt-2" style="display: none; padding: 10px; border-left: 4px solid #17a2b8;">
+                <strong>Deuda Pendiente:</strong> <span id="monto-deuda" style="font-size: 1.1em;">Loading...</span>
+                <button type="button" id="btn-copiar-deuda" class="btn btn-sm btn-primary ml-2" style="padding: 2px 8px; font-size: 0.85em;">
+                    Copiar al monto
+                </button>
+            </div>
+        `;
+        $('#id_inmueble').closest('.form-group').append(deudaContainerHtml);
+        
+        function consultarDeuda() {
+            const facturaId = $('#id_factura').val();
+            const inmuebleId = $('#id_inmueble').val();
+            const $info = $('#info-deuda');
+            const $monto = $('#monto-deuda');
+            
+            if (facturaId && inmuebleId) {
+                // Mostrar "Cargando..."
+                $info.show();
+                $monto.text('Consultando...');
+                
+                $.ajax({
+                    url: "{% url 'nucleo:api_obtener_deuda' %}",
+                    data: {
+                        'factura_id': facturaId,
+                        'inmueble_id': inmuebleId
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            // Determinar si es deuda o saldo a favor
+                            let textoDeuda = '';
+                            if (response.deuda > 0) {
+                                // Deuda pendiente - ROJO
+                                textoDeuda = `<span style="color: #dc3545; font-weight: bold;">BS ${response.deuda_formateada}</span> <span class="text-muted ml-2">(Ref: $${response.deuda_usd_formateada})</span>`;
+                                $info.removeClass('alert-success').addClass('alert-danger');
+                                $info.css('border-left-color', '#dc3545');
+                            } else if (response.deuda < 0) {
+                                // Saldo a favor - VERDE
+                                const saldoBs = response.deuda_formateada.replace('-', '');
+                                const saldoUsd = response.deuda_usd_formateada.replace('-', '');
+                                textoDeuda = `<span style="color: #28a745; font-weight: bold;">Saldo a favor: BS ${saldoBs}</span> <span class="text-muted ml-2">(Ref: $${saldoUsd})</span>`;
+                                $info.removeClass('alert-danger alert-info').addClass('alert-success');
+                                $info.css('border-left-color', '#28a745');
+                            } else {
+                                // Solvente exacto
+                                textoDeuda = `<span style="color: #28a745; font-weight: bold;">BS 0.00</span> <span class="badge badge-success ml-2">Solvente</span>`;
+                                $info.removeClass('alert-danger alert-info').addClass('alert-success');
+                                $info.css('border-left-color', '#28a745');
+                            }
+                            
+                            $monto.html(textoDeuda);
+                            
+                            // Guardar el valor puro no formateado en el botón
+                            // Por defecto copiamos BS, pero si cambia moneda se ajusta
+                            $('#btn-copiar-deuda').data('monto-bs', response.deuda_formateada);
+                            $('#btn-copiar-deuda').data('monto-usd', response.deuda_usd_formateada);
+                            $('#btn-copiar-deuda').data('tasa', response.tasa);
+                            
+                            // Mostrar botón copiar solo si hay deuda positiva
+                            if(response.deuda > 0) {
+                                $('#btn-copiar-deuda').show();
+                            } else {
+                                $('#btn-copiar-deuda').hide();
+                            }
+                            
+                            // Actualizar tasa global en variable
+                            window.tasaGlobal = response.tasa;
+
+                            // Si ya está en USD, actualizar la tasa automáticamente
+                            if ($('#id_moneda').val() === 'USD') {
+                                $('#id_tasa_cambio').val(response.tasa.toFixed(4));
+                            }
+                        }
+                    },
+                    error: function () {
+                        $monto.text('Error al consultar');
+                    }
+                });
+            } else {
+                $info.hide();
+            }
+        }
+        
+        // Listeners for changes
+        $('#id_factura, #id_inmueble').on('change', consultarDeuda);
+        
+        // Tasa BCV del dashboard (pasada desde el backend como string para precisión)
+        window.tasaBCV = "{{ tasa_bcv }}";
+        
+        // Auto-rellenar tasa si es USD - funciona desde el inicio
+        function actualizarTasa() {
+            if ($('#id_moneda').val() === 'USD' && parseFloat(window.tasaBCV) > 0) {
+                $('#id_tasa_cambio').val(window.tasaBCV);
+            } else if ($('#id_moneda').val() === 'VES') {
+                $('#id_tasa_cambio').val('');
+            }
+        }
+        
+        // Ejecutar al cargar la página
+        actualizarTasa();
+        
+        // Ejecutar cuando cambie la moneda
+        $('#id_moneda').on('change', actualizarTasa);
+
+        // Click en copiar
+        $(document).on('click', '#btn-copiar-deuda', function() {
+            const moneda = $('#id_moneda').val();
+            let montoStr = '';
+            
+            if (moneda === 'USD') {
+                montoStr = $(this).data('monto-usd');
+                // Asegurar que la tasa esté llena
+                if(window.tasaGlobal) {
+                    $('#id_tasa_cambio').val(window.tasaGlobal.toFixed(4));
+                }
+            } else {
+                montoStr = $(this).data('monto-bs');
+            }
+            
+            if(montoStr) {
+                const inputMonto = document.getElementById('id_monto_pagado');
+                inputMonto.value = montoStr;
+                inputMonto.dispatchEvent(new Event('blur'));
+                $(inputMonto).css('background-color', '#d4edda').animate({backgroundColor: '#fff'}, 500);
+            }
+        });
+
+        // ==========================================
+        // FORMATO DE MONEDA EN INPUT (Monto Pagado)
+        // ==========================================
+        const inputMonto = document.getElementById('id_monto_pagado');
+        const form = document.querySelector('form');
+
+        if (inputMonto) {
+            // Función auxiliar para formatear
+            function formatearMoneda(valor) {
+                if (!valor) return '';
+                // Limpiar: quitar puntos, cambiar coma a punto para procesar, PERO
+                // Si el valor viene de "Copiar", ya viene como "1.234,56"
+                // Si el usuario escribe "1234", lo convertimos
+                
+                // Estrategia robusta:
+                // 1. Quitar cualquier punto (separador miles visual)
+                let limpio = valor.toString().replace(/\./g, '');
+                // 2. Reemplazar coma por punto para float
+                limpio = limpio.replace(',', '.');
+                
+                const numero = parseFloat(limpio);
+
+                if (isNaN(numero)) return valor; // Retornar original si falla
+
+                return numero.toLocaleString('es-VE', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            // Al cargar, si ya tiene valor, formatearlo
+            if (inputMonto.value) {
+                inputMonto.value = formatearMoneda(inputMonto.value);
+            }
+
+            // Al ganar foco, seleccionar todo
+            inputMonto.addEventListener('focus', function () {
+                this.select();
+            });
+
+            // Al perder el foco (blur), formatear visualmente
+            inputMonto.addEventListener('blur', function () {
+                this.value = formatearMoneda(this.value);
+            });
+
+            // Antes de enviar el formulario, limpiar el formato
+            if (form) {
+                form.addEventListener('submit', function () {
+                    let valor = inputMonto.value;
+                    if (valor) {
+                        valor = valor.replace(/\./g, '');
+                        valor = valor.replace(',', '.');
+                        inputMonto.value = valor;
+                    }
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends 'nucleo/base.html' %}
+
+{% block title %}Auditoría del Sistema - {{ nombre_sistema }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-between align-center">
+        <h2>📋 Auditoría del Sistema</h2>
+        <a href="{% url 'nucleo:exportar_auditoria' %}?{{ request.GET.urlencode }}" class="btn btn-success">
+            📊 Exportar a Excel
+        </a>
+    </div>
+    <div class="card-body">
+        <!-- Filtros -->
+        <form method="get" class="filtros-auditoria">
+            <div class="row-filtros">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <select name="usuario" class="form-control">
+                        <option value="">Todos</option>
+                        {% for usuario in usuarios %}
+                        <option value="{{ usuario.id }}" {% if filtros.usuario == usuario.id|stringformat:"s" %}selected{% endif %}>
+                            {{ usuario.username }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Desde</label>
+                    <input type="date" name="fecha_desde" class="form-control" value="{{ filtros.fecha_desde }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Hasta</label>
+                    <input type="date" name="fecha_hasta" class="form-control" value="{{ filtros.fecha_hasta }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Modelo</label>
+                    <select name="modelo" class="form-control">
+                        <option value="">Todos</option>
+                        {% for modelo_item in modelos %}
+                        <option value="{{ modelo_item }}" {% if filtros.modelo == modelo_item %}selected{% endif %}>
+                            {{ modelo_item }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Acción</label>
+                    <select name="accion" class="form-control">
+                        <option value="">Todas</option>
+                        {% for accion_value, accion_label in acciones %}
+                        <option value="{{ accion_value }}" {% if filtros.accion == accion_value %}selected{% endif %}>
+                            {{ accion_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group" style="align-self: flex-end; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button type="submit" class="btn btn-crear">🔍 Filtrar</button>
+                    <a href="{% url 'nucleo:vista_auditoria' %}" class="btn btn-volver">✖ Limpiar</a>
+                </div>
+            </div>
+        </form>
+
+        <!-- Resultados -->
+        {% if logs %}
+        <div style="margin-top: 30px;">
+            <p style="color: var(--gray); margin-bottom: 15px;">
+                Mostrando {{ logs.start_index }} - {{ logs.end_index }} de {{ logs.paginator.count }} resultados
+            </p>
+            
+            <table class="tabla-principal">
+                <thead>
+                    <tr>
+                        <th>Fecha/Hora</th>
+                        <th>Usuario</th>
+                        <th>Acción</th>
+                        <th>Modelo</th>
+                        <th>Objeto</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.fecha_hora|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <strong>👤 {{ log.usuario.username }}</strong>
+                        </td>
+                        <td>
+                            {% if log.accion == 'CREAR' %}
+                            <span class="badge badge-success">{{ log.get_accion_display }}</span>
+                            {% elif log.accion == 'EDITAR' %}
+                            <span class="badge badge-info">{{ log.get_accion_display }}</span>
+                            {% elif log.accion == 'BORRAR' %}
+                            <span class="badge badge-danger">{{ log.get_accion_display }}</span>
+                            {% else %}
+                            <span class="badge badge-secondary">{{ log.get_accion_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.modelo }}</td>
+                        <td>#{{ log.objeto_id }}</td>
+                        <td>{{ log.descripcion }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Paginación -->
+            {% if logs.has_other_pages %}
+            <div class="pagination">
+                {% if logs.has_previous %}
+                <a href="?page=1&{{ request.GET.urlencode }}" class="btn btn-sm btn-volver">« Primera</a>
+                <a href="?page={{ logs.previous_page_number }}&{{ request.GET.urlencode }}" class="btn btn-sm btn-volver">‹ Anterior</a>
+                {% endif %}
+
+                <span class="current-page">
+                    Página {{ logs.number }} de {{ logs.paginator.num_pages }}
+                </span>
+
+                {% if logs.has_next %}
+                <a href="?page={{ logs.next_page_number }}&{{ request.GET.urlencode }}" class="btn btn-sm btn-volver">Siguiente ›</a>
+                <a href="?page={{ logs.paginator.num_pages }}&{{ request.GET.urlencode }}" class="btn btn-sm btn-volver">Última »</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 60px 20px; color: var(--gray); margin-top: 30px;">
+            <h3 style="font-size: 48px; margin-bottom: 10px;">📋</h3>
+            <h3 style="margin-bottom: 10px;">No hay registros</h3>
+            <p>No se encontraron actividades con los filtros seleccionados</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.row-filtros {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 20px;
+}
+
+.current-page {
+    padding: 10px 20px;
+    background: var(--primary);
+    color: white;
+    border-radius: 5px;
+    font-weight: 600;
+}
+</style>
+{% endblock %}

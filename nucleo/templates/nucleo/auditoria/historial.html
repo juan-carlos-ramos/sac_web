@@ -1,0 +1,137 @@
+{% extends 'nucleo/base.html' %}
+
+{% block title %}Historial de {{ tipo }} - {{ nombre_sistema }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-between align-center">
+        <h2>📜 Historial de {{ tipo }}</h2>
+        <a href="javascript:history.back()" class="btn btn-volver">← Volver</a>
+    </div>
+    <div class="card-body">
+        <div class="info-objeto">
+            <h3>{{ objeto }}</h3>
+            <p style="color: var(--gray);">ID: #{{ objeto.id }}</p>
+        </div>
+
+        {% if logs %}
+        <div class="timeline">
+            {% for log in logs %}
+            <div class="timeline-item">
+                <div class="timeline-marker {% if log.accion == 'CREAR' %}crear{% elif log.accion == 'EDITAR' %}editar{% elif log.accion == 'BORRAR' %}borrar{% endif %}"></div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <strong>👤 {{ log.usuario.username }}</strong>
+                        <span class="timeline-date">{{ log.fecha_hora|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div class="timeline-body">
+                        {% if log.accion == 'CREAR' %}
+                        <span class="badge badge-success">✓ Creado</span>
+                        {% elif log.accion == 'EDITAR' %}
+                        <span class="badge badge-info">✎ Editado</span>
+                        {% elif log.accion == 'BORRAR' %}
+                        <span class="badge badge-danger">✗ Eliminado</span>
+                        {% else %}
+                        <span class="badge badge-secondary">{{ log.get_accion_display }}</span>
+                        {% endif %}
+                        <p>{{ log.descripcion }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 60px 20px; color: var(--gray);">
+            <h3 style="font-size: 48px; margin-bottom: 10px;">📜</h3>
+            <h3 style="margin-bottom: 10px;">Sin historial</h3>
+            <p>No hay cambios registrados para este {{ tipo|lower }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.info-objeto {
+    padding: 20px;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    color: white;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.info-objeto h3 {
+    margin: 0 0 5px 0;
+    font-size: 24px;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 40px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--gray-light);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -33px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px var(--gray-light);
+}
+
+.timeline-marker.crear {
+    background: var(--success);
+    box-shadow: 0 0 0 2px var(--success);
+}
+
+.timeline-marker.editar {
+    background: var(--primary-light);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.timeline-marker.borrar {
+    background: var(--danger);
+    box-shadow: 0 0 0 2px var(--danger);
+}
+
+.timeline-content {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    border-left: 3px solid var(--primary);
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.timeline-date {
+    color: var(--gray);
+    font-size: 13px;
+}
+
+.timeline-body p {
+    margin: 10px 0 0 0;
+    color: var(--gray-dark);
+}
+</style>
+{% endblock %}

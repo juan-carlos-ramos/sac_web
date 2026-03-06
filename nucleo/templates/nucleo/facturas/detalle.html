@@ -1,0 +1,499 @@
+{% extends 'nucleo/base.html' %}
+{% load nucleo_tags %}
+
+{% block title %}Factura {{ factura.periodo }} - {{ nombre_sistema }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-between align-center">
+        <h2>Factura {{ factura.periodo }}</h2>
+        <div class="d-flex gap-1">
+            <button type="button" id="btn-ver-solvencia" class="btn btn-editar">📊 Ver Solvencia</button>
+            {% if perms.nucleo.add_gasto %}
+            <a href="{% url 'nucleo:agregar_gasto' factura.id %}" class="btn btn-crear">+ Agregar Gasto</a>
+            {% endif %}
+            <a href="{% url 'nucleo:lista_facturas' %}" class="btn btn-volver">← Volver</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom: 20px; color: var(--gray);">
+            <strong>Fecha de creación:</strong> {{ factura.creada_en|date:"d/m/Y H:i" }}
+        </p>
+
+        <h3 style="margin-bottom: 15px;">Gastos Registrados</h3>
+
+        {% if gastos %}
+        <table class="tabla-principal">
+            <thead>
+                <tr>
+                    <th>Descripción</th>
+                    <th>Monto (Bs)</th>
+                    <th>Categoría</th>
+                    <th>Tipo</th>
+                    <th>Inmueble</th>
+                    <th class="text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gasto in gastos %}
+                <tr>
+                    <td>{{ gasto.descripcion }}</td>
+                    <td><strong>Bs {{ gasto.monto|formato_moneda }}</strong></td>
+                    <td>{{ gasto.get_categoria_display }}</td>
+                    <td>
+                        {% if gasto.es_gasto_no_comun %}
+                        <span style="color: var(--danger);">No Común</span>
+                        {% else %}
+                        <span style="color: var(--success);">Común</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if gasto.inmueble_especifico %}
+                        {{ gasto.inmueble_especifico.numero_apto }}
+                        {% else %}
+                        Todos
+                        {% endif %}
+                    </td>
+                    <td class="acciones">
+                        {% if perms.nucleo.delete_gasto %}
+                        <a href="{% url 'nucleo:eliminar_gasto' gasto.id %}" class="btn btn-borrar btn-sm"
+                            onclick="return confirm('¿Está seguro de eliminar este gasto?')">
+                            Eliminar
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div style="margin-top: 30px; padding: 20px; background: var(--background); border-radius: 8px;">
+            <h3 style="margin-bottom: 15px;">Resumen</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <p style="color: var(--gray); margin-bottom: 5px;">Gastos Comunes:</p>
+                    <p style="font-size: 24px; font-weight: 600; color: var(--primary);">
+                        Bs {{ total_gastos_comunes|formato_moneda }}
+                    </p>
+                </div>
+                <div>
+                    <p style="color: var(--gray); margin-bottom: 5px;">Gastos No Comunes:</p>
+                    <p style="font-size: 24px; font-weight: 600; color: var(--primary);">
+                        Bs {{ total_gastos_no_comunes|formato_moneda }}
+                    </p>
+                </div>
+            </div>
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid var(--gray-light);">
+                <p style="color: var(--gray); margin-bottom: 5px;">Total General:</p>
+                <p style="font-size: 32px; font-weight: 600; color: var(--primary-dark);">
+                    Bs {{ total_general|formato_moneda }}
+                </p>
+            </div>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 40px 20px; color: var(--gray);">
+            <h3 style="margin-bottom: 10px;">No hay gastos registrados</h3>
+            <p>Comienza agregando el primer gasto a esta factura</p>
+            {% if perms.nucleo.add_gasto %}
+            <a href="{% url 'nucleo:agregar_gasto' factura.id %}" class="btn btn-crear mt-2">+ Agregar Primer Gasto</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+
+
+
+
+
+<!-- SECCIÓN: Recibos por Inmueble -->
+<div class="card" style="margin-top: 20px;">
+    <div class="card-header d-flex justify-between align-center">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <h2 style="margin: 0;">📄 Recibos por Inmueble</h2>
+            {% if inmuebles %}
+            <input type="text" id="buscar-recibo" 
+                   placeholder="🔍 Buscar..." 
+                   autocomplete="off"
+                   style="width: 200px; padding: 8px 12px; border: 1px solid var(--gray-light); border-radius: 6px; font-size: 0.9rem;">
+            {% endif %}
+        </div>
+        {% if inmuebles %}
+        <div style="position: relative; display: inline-block;">
+            <button type="button" class="btn btn-success" onclick="toggleReciboDropdown()" style="display: flex; align-items: center; gap: 5px;">
+                📥 Exportar Excel <span style="font-size: 10px;">▼</span>
+            </button>
+            <div id="recibo-dropdown" style="display: none; position: absolute; top: 100%; right: 0; background: white; min-width: 200px; box-shadow: var(--shadow-lg); border-radius: 8px; z-index: 100; margin-top: 5px; overflow: hidden;">
+                <a href="{% url 'nucleo:exportar_recibos_factura' factura.id %}" style="display: block; padding: 10px 15px; color: var(--text); text-decoration: none; border-bottom: 1px solid var(--gray-light);">
+                    📅 <strong>Solo {{ factura.periodo }}</strong>
+                </a>
+                <a href="{% url 'nucleo:exportar_recibos_todos' %}" style="display: block; padding: 10px 15px; color: var(--text); text-decoration: none;">
+                    📋 Todas las facturas
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if inmuebles %}
+        <table class="tabla-principal" id="tabla-recibos">
+            <thead>
+                <tr>
+                    <th>Apto</th>
+                    <th>Propietario</th>
+                    <th class="text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inmueble in inmuebles %}
+                <tr>
+                    <td><strong>{{ inmueble.numero_apto }}</strong></td>
+                    <td>{{ inmueble.propietario|default:"Sin asignar" }}</td>
+                    <td class="acciones">
+                        <a href="{% url 'nucleo:recibo_inmueble' factura.id inmueble.id %}" class="btn btn-crear btn-sm">👁️ Ver</a>
+                        <a href="{% url 'nucleo:pdf_recibo_puppeteer' factura.id inmueble.id %}" class="btn btn-editar btn-sm" target="_blank">📄 PDF</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align: center; padding: 40px 20px; color: var(--gray);">
+            <h3 style="margin-bottom: 10px;">No hay inmuebles registrados</h3>
+            <p>Primero debes crear inmuebles para generar recibos</p>
+            <a href="{% url 'nucleo:lista_inmuebles' %}" class="btn btn-crear mt-2">Ir a Inmuebles</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- MODAL: Reporte de Solvencia -->
+<div id="solvenciaModal" class="solvencia-modal-overlay">
+    <div class="solvencia-modal-content">
+        <span class="solvencia-close-modal">&times;</span>
+        
+        <div class="solvencia-modal-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h2 style="margin: 0;">📊 Reporte de Solvencia</h2>
+                <p style="margin: 5px 0 0 0;">Factura {{ factura.periodo }}</p>
+            </div>
+            <!-- Dropdown Exportar Excel -->
+            <div style="position: relative; display: inline-block; margin-right: 30px;">
+                <button type="button" class="btn btn-success" onclick="toggleSolvenciaDropdown()" style="display: flex; align-items: center; gap: 5px;">
+                    📥 Exportar <span style="font-size: 10px;">▼</span>
+                </button>
+                <div id="solvencia-dropdown" style="display: none; position: absolute; top: 100%; right: 0; background: white; min-width: 200px; box-shadow: var(--shadow-lg); border-radius: 8px; z-index: 100; margin-top: 5px; overflow: hidden;">
+                    <a href="{% url 'nucleo:exportar_solvencia' factura.id %}" style="display: block; padding: 10px 15px; color: var(--text); text-decoration: none; border-bottom: 1px solid var(--gray-light);">
+                        📅 <strong>Solo {{ factura.periodo }}</strong>
+                    </a>
+                    <a href="{% url 'nucleo:exportar_solvencia_todos' %}" style="display: block; padding: 10px 15px; color: var(--text); text-decoration: none;">
+                        📋 Todas las facturas
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Buscador -->
+        <div class="solvencia-search-container">
+            <input type="text" id="solvencia-search" placeholder="🔍 Buscar por apto, propietario, estado..." autocomplete="off">
+        </div>
+        
+        <div id="solvencia-loading" style="text-align: center; padding: 40px;">
+            <p>Cargando datos...</p>
+        </div>
+        
+        <div id="solvencia-tabla-container" style="display: none; max-height: 400px; overflow-y: auto;">
+            <table class="tabla-principal" id="tabla-solvencia">
+                <thead>
+                    <tr>
+                        <th>Apto</th>
+                        <th>Propietario</th>
+                        <th>A Pagar</th>
+                        <th>Pagado</th>
+                        <th>Deuda</th>
+                        <th>Ref. $</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="solvencia-tbody">
+                    <!-- Se llena dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modal Overlay */
+    .solvencia-modal-overlay {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(30, 58, 95, 0.85);
+        justify-content: center;
+        align-items: center;
+    }
+    
+    /* Modal Content */
+    .solvencia-modal-content {
+        background: var(--white);
+        border-radius: 16px;
+        max-width: 900px;
+        width: 95%;
+        max-height: 90vh;
+        box-shadow: var(--shadow-lg);
+        position: relative;
+        animation: modalSlideIn 0.3s ease;
+    }
+    
+    @keyframes modalSlideIn {
+        from { transform: translateY(-30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    /* Close Button */
+    .solvencia-close-modal {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-size: 28px;
+        font-weight: bold;
+        color: var(--gray);
+        cursor: pointer;
+        transition: var(--transition-fast);
+    }
+    
+    .solvencia-close-modal:hover {
+        color: var(--danger);
+    }
+    
+    /* Header */
+    .solvencia-modal-header {
+        padding: 25px 30px;
+        border-bottom: 1px solid var(--gray-light);
+    }
+    
+    .solvencia-modal-header h2 {
+        margin: 0;
+        color: var(--primary-dark);
+        font-size: 1.5rem;
+    }
+    
+    .solvencia-modal-header p {
+        margin: 5px 0 0;
+        color: var(--gray);
+    }
+    
+    /* Table Container */
+    #solvencia-tabla-container {
+        padding: 20px 30px;
+    }
+    
+    #tabla-solvencia th, #tabla-solvencia td {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+    
+    /* Status Badges */
+    .badge-solvente {
+        background-color: var(--success);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        font-weight: 600;
+    }
+    
+    .badge-deudor {
+        background-color: var(--danger);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        font-weight: 600;
+    }
+    
+    /* Footer */
+    .solvencia-modal-footer {
+        padding: 20px 30px;
+        border-top: 1px solid var(--gray-light);
+        text-align: right;
+    }
+    
+    /* Search Container */
+    .solvencia-search-container {
+        padding: 15px 30px;
+        border-bottom: 1px solid var(--gray-light);
+        background: var(--background);
+    }
+    
+    #solvencia-search {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid var(--gray-light);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: var(--transition-fast);
+    }
+    
+    #solvencia-search:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(44, 95, 141, 0.15);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle dropdowns para exportar
+function toggleReciboDropdown() {
+    const dropdown = document.getElementById('recibo-dropdown');
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    // Cerrar el otro si está abierto
+    document.getElementById('solvencia-dropdown').style.display = 'none';
+}
+
+function toggleSolvenciaDropdown() {
+    const dropdown = document.getElementById('solvencia-dropdown');
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
+// Cerrar dropdowns al hacer click fuera
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#recibo-dropdown') && !e.target.closest('button[onclick*="toggleReciboDropdown"]')) {
+        const reciboDropdown = document.getElementById('recibo-dropdown');
+        if (reciboDropdown) reciboDropdown.style.display = 'none';
+    }
+    if (!e.target.closest('#solvencia-dropdown') && !e.target.closest('button[onclick*="toggleSolvenciaDropdown"]')) {
+        const solvenciaDropdown = document.getElementById('solvencia-dropdown');
+        if (solvenciaDropdown) solvenciaDropdown.style.display = 'none';
+    }
+});
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('solvenciaModal');
+        const btnOpen = document.getElementById('btn-ver-solvencia');
+        const btnClose = document.querySelector('.solvencia-close-modal');
+        const loading = document.getElementById('solvencia-loading');
+        const tablaContainer = document.getElementById('solvencia-tabla-container');
+        const tbody = document.getElementById('solvencia-tbody');
+        
+        // Abrir modal
+        btnOpen.addEventListener('click', function() {
+            modal.style.display = 'flex';
+            loading.style.display = 'block';
+            tablaContainer.style.display = 'none';
+            
+            // Cargar datos vía AJAX
+            fetch("{% url 'nucleo:api_solvencia_factura' factura.id %}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        tbody.innerHTML = '';
+                        data.inmuebles.forEach(item => {
+                            const badgeClass = item.es_solvente ? 'badge-solvente' : 'badge-deudor';
+                            const estadoTexto = item.es_solvente ? 'SOLVENTE' : 'DEUDOR';
+                            
+                            // Determinar color y texto de la deuda
+                            let deudaHtml = '';
+                            let deudaUsdHtml = '';
+                            if (item.deuda > 0) {
+                                // Deuda pendiente - ROJO
+                                deudaHtml = `<strong style="color: #dc3545;">Bs ${item.deuda.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>`;
+                                deudaUsdHtml = `<small style="color: #dc3545;">$${item.deuda_usd.toFixed(2)}</small>`;
+                            } else if (item.deuda < 0) {
+                                // Saldo a favor - VERDE
+                                const saldoPositivo = Math.abs(item.deuda);
+                                const saldoUsdPositivo = Math.abs(item.deuda_usd);
+                                deudaHtml = `<strong style="color: #28a745;">Saldo a favor: Bs ${saldoPositivo.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>`;
+                                deudaUsdHtml = `<small style="color: #28a745;">$${saldoUsdPositivo.toFixed(2)}</small>`;
+                            } else {
+                                // Solvente exacto
+                                deudaHtml = `<strong>Bs 0.00</strong>`;
+                                deudaUsdHtml = `<small>$0.00</small>`;
+                            }
+                            
+                            const row = `<tr>
+                                <td><strong>${item.apto}</strong></td>
+                                <td><small>${item.propietario}</small></td>
+                                <td>Bs ${item.total_a_pagar.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td>Bs ${item.total_pagado.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td>${deudaHtml}</td>
+                                <td>${deudaUsdHtml}</td>
+                                <td><span class="${badgeClass}">${estadoTexto}</span></td>
+                            </tr>`;
+                            tbody.innerHTML += row;
+                        });
+                        loading.style.display = 'none';
+                        tablaContainer.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    loading.innerHTML = '<p style="color: var(--danger);">Error al cargar datos</p>';
+                });
+        });
+        
+        // Cerrar modal
+        btnClose.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        // Cerrar al hacer clic fuera
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        // Filtro de búsqueda modal solvencia
+        const searchInput = document.getElementById('solvencia-search');
+        searchInput.addEventListener('input', function() {
+            const filtro = this.value.toLowerCase();
+            const filas = tbody.querySelectorAll('tr');
+            
+            filas.forEach(fila => {
+                const texto = fila.textContent.toLowerCase();
+                fila.style.display = texto.includes(filtro) ? '' : 'none';
+            });
+        });
+        
+        // Filtro de búsqueda para Recibos por Inmueble
+        const searchRecibo = document.getElementById('buscar-recibo');
+        if (searchRecibo) {
+            // Función para quitar acentos
+            function quitarAcentos(texto) {
+                return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            }
+            
+            searchRecibo.addEventListener('input', function() {
+                const filtro = quitarAcentos(this.value.toLowerCase().trim());
+                const filasRecibos = document.querySelectorAll('#tabla-recibos tbody tr');
+                
+                // Si no hay filtro, mostrar todas
+                if (!filtro) {
+                    filasRecibos.forEach(fila => fila.style.display = '');
+                    return;
+                }
+                
+                // Dividir el filtro en palabras
+                const palabras = filtro.split(/\s+/);
+                
+                filasRecibos.forEach(fila => {
+                    const texto = quitarAcentos(fila.textContent.toLowerCase());
+                    // Verificar que TODAS las palabras estén en la fila
+                    const coincide = palabras.every(palabra => texto.includes(palabra));
+                    fila.style.display = coincide ? '' : 'none';
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

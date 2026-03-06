@@ -1,0 +1,55 @@
+{% extends 'nucleo/base.html' %}
+
+{% block title %}Agregar Gasto - {{ nombre_sistema }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header d-flex justify-between align-center">
+        <h2>Agregar Gasto a Factura {{ factura.periodo }}</h2>
+        <a href="{% url 'nucleo:detalle_factura' factura.id %}" class="btn btn-volver">← Volver</a>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.descripcion.id_for_label }}">{{ form.descripcion.label }}</label>
+                {{ form.descripcion }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.monto.id_for_label }}">{{ form.monto.label }}</label>
+                {{ form.monto }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
+                {{ form.categoria }}
+            </div>
+
+            <div class="form-group">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" name="es_gasto_no_comun" id="id_es_gasto_no_comun" style="width: auto; margin: 0;">
+                    <label for="id_es_gasto_no_comun" style="margin: 0; cursor: pointer; font-weight: 500;">
+                        ¿Es gasto no común?
+                    </label>
+                </div>
+                <small style="color: var(--gray); display: block; margin-top: 5px;">Marcar si este gasto aplica solo a un inmueble</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.inmueble_especifico.id_for_label }}">{{ form.inmueble_especifico.label }}</label>
+                {{ form.inmueble_especifico }}
+                {% if form.inmueble_especifico.help_text %}
+                <small>{{ form.inmueble_especifico.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="d-flex gap-1">
+                <button type="submit" class="btn btn-success">Agregar Gasto</button>
+                <a href="{% url 'nucleo:detalle_factura' factura.id %}" class="btn btn-volver">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

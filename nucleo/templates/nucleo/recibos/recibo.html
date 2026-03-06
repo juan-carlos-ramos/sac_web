@@ -1,0 +1,339 @@
+{% extends 'nucleo/base.html' %}
+{% load nucleo_tags %}
+
+{% block title %}Recibo {{ inmueble.numero_apto }} - {{ factura.periodo }} - {{ nombre_sistema }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para impresión/PDF */
+    @media print {
+        @page {
+            margin: 10mm;
+        }
+
+        /* Ocultar elementos de navegación */
+        .navbar,
+        .btn,
+        .card-header .d-flex.gap-1 {
+            display: none !important;
+        }
+
+        /* Ajustar tamaños de fuente para PDF */
+        body {
+            font-size: 7.5pt !important;
+            line-height: 1.2 !important;
+        }
+
+        h2 {
+            font-size: 12pt !important;
+            margin-bottom: 8px !important;
+        }
+
+        h3 {
+            font-size: 9pt !important;
+            margin-bottom: 6px !important;
+        }
+
+        p,
+        td,
+        th {
+            font-size: 7pt !important;
+        }
+
+        .card {
+            box-shadow: none !important;
+            border: none !important;
+        }
+
+        .card-header {
+            padding: 8px 0 !important;
+            border: none !important;
+        }
+
+        .card-body {
+            padding: 0 !important;
+        }
+
+        table {
+            margin: 5px 0 !important;
+        }
+
+        th {
+            padding: 4px !important;
+            font-size: 8pt !important;
+        }
+
+        td {
+            padding: 3px 6px !important;
+            font-size: 8pt !important;
+        }
+
+        /* Resumen final más compacto */
+        .resumen-final {
+            padding: 8px !important;
+        }
+
+        .resumen-final p {
+            margin: 2px 0 !important;
+            font-size: 8.5pt !important;
+        }
+
+        .resumen-final .monto-grande {
+            font-size: 13pt !important;
+        }
+
+        .resumen-final .monto-mediano {
+            font-size: 10pt !important;
+        }
+
+        /* Encabezado del recibo */
+        .encabezado-recibo h2 {
+            font-size: 16pt !important;
+        }
+
+        .encabezado-recibo p {
+            font-size: 8pt !important;
+        }
+    }
+
+    /* Clase para ocultar en PDF */
+    .no-print {
+        display: inline-block;
+    }
+
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+
+    <div class="card-body">
+        <!-- Botones de navegación (solo visibles en web) -->
+        <div class="d-flex gap-1 no-print" style="margin-bottom: 15px; justify-content: flex-end;">
+            <a href="{% url 'nucleo:pdf_recibo_puppeteer' factura.id inmueble.id %}" class="btn btn-crear"
+                target="_blank">
+                📄 Descargar PDF
+            </a>
+            <a href="{% url 'nucleo:detalle_factura' factura.id %}" class="btn btn-volver">← Volver</a>
+        </div>
+
+        <!-- Encabezado Profesional del Recibo -->
+        {% if datos_condominio %}
+        <div class="encabezado-recibo"
+            style="margin-bottom: 20px; padding: 20px; background: linear-gradient(135deg, #1e3a5f 0%, #2c5f8d 100%); color: white; border-radius: 10px; border: 3px solid #d4af37;">
+            <div style="text-align: center; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+                {% load static %}
+                <div style="flex: 1; text-align: center; padding-left: 80px;">
+                    <h2 style="margin: 0 0 5px 0; font-size: 24pt; font-weight: 800; color: #d4af37; text-transform: uppercase; letter-spacing: 1px;">
+                        RECIBO DE CONDOMINIO</h2>
+                    <h3 style="margin: 0; font-size: 14pt; font-weight: 500; color: white;">
+                        {{datos_condominio.nombre_condominio}}</h3>
+                </div>
+                <img src="{% static 'img/sac.png' %}" alt="Logo SAC" 
+                     style="width: 65px; height: 65px; object-fit: contain; border-radius: 8px; margin-right: 10px;">
+            </div>
+        <div
+                style="border-top: 2px solid rgba(212, 175, 55, 0.3); padding-top: 12px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                <div>
+                    <p style="margin: 3px 0; font-size: 9pt;"><strong style="color: #d4af37;">RIF:</strong>
+                        {{datos_condominio.rif }}</p>
+                    <p style="margin: 3px 0; font-size: 9pt;"><strong style="color: #d4af37;">Dirección:</strong>
+                        {{datos_condominio.direccion }}</p>
+                </div>
+                <div>
+                    <p style="margin: 3px 0; font-size: 9pt;"><strong style="color: #d4af37;">Período:</strong>
+                        {{factura.periodo }}</p>
+                    <p style="margin: 3px 0; font-size: 9pt;"><strong style="color: #d4af37;">Fecha:</strong>
+                        {{factura.creada_en|date:"d/m/Y" }}</p>
+                </div>
+                <div>
+                    <p style="margin: 3px 0; font-size: 9pt;"><strong style="color: #d4af37;">Tasa BCV:</strong>
+                        Bs. {{ tasa_cambio|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Datos del Inmueble -->
+        <div style="margin-bottom: 15px;">
+            <h3 style="margin-bottom: 8px;">Datos del Inmueble</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <p style="margin: 3px 0;"><strong>Número:</strong> {{inmueble.numero_apto}}</p>
+                    <p style="margin: 3px 0;"><strong>Propietario:</strong> {{ inmueble.propietario|default:"Sin asignar" }}</p>
+                    <p style="margin: 3px 0;"><strong>Alícuota:</strong> {{resultado.alicuota|formato_moneda}}</p>
+                </div>
+                <div>
+                    <p style="margin: 3px 0;"><strong>Documento:</strong> {{inmueble.documento_identidad|default:"N/A"}}
+                    </p>
+                    <p style="margin: 3px 0;"><strong>Teléfono:</strong> {{inmueble.telefono|default:"N/A"}}</p>
+                    <p style="margin: 3px 0;"><strong>Email:</strong> {{inmueble.email|default:"N/A"}}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gastos Comunes -->
+        <div style="margin-bottom: 15px;">
+            <h3 style="margin-bottom: 6px;">Gastos Comunes</h3>
+            {% if resultado.detalle_gastos_comunes %}
+            <table class="tabla-principal">
+                <thead>
+                    <tr>
+                        <th>Descripción</th>
+                        <th>Monto Total</th>
+                        <th>Categoría</th>
+                        <th>Monto Prorrateado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for gasto in resultado.detalle_gastos_comunes %}
+                    <tr>
+                        <td>{{ gasto.descripcion }}</td>
+                        <td>Bs {{ gasto.monto_total|formato_moneda }}</td>
+                        <td>{{ gasto.categoria }}</td>
+                        <td><strong>Bs {{ gasto.monto_inmueble|formato_moneda }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="background: var(--background); font-weight: 600;">
+                        <td colspan="3">Subtotal Gastos Comunes</td>
+                        <td>Bs {{ resultado.gastos_comunes_por_inmueble|formato_moneda }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color: var(--gray);">No hay gastos comunes</p>
+            {% endif %}
+        </div>
+
+        <!-- Fondo de Reserva -->
+        <div
+            style="margin-bottom: 15px; padding: 10px; background: #fff3cd; border-left: 4px solid var(--accent-gold); border-radius: 5px;">
+            <p style="margin: 0;"><strong>Fondo de Reserva (10% sobre gastos comunes):</strong> Bs
+                {{resultado.fondo_reserva|formato_moneda }}</p>
+        </div>
+
+        <!-- Gastos No Comunes -->
+        {% if resultado.detalle_gastos_no_comunes %}
+        <div style="margin-bottom: 15px;">
+            <h3 style="margin-bottom: 6px;">Gastos No Comunes (Específicos de este Inmueble)</h3>
+            <table class="tabla-principal">
+                <thead>
+                    <tr>
+                        <th>Descripción</th>
+                        <th>Categoría</th>
+                        <th>Monto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for gasto in resultado.detalle_gastos_no_comunes %}
+                    <tr>
+                        <td>{{ gasto.descripcion }}</td>
+                        <td>{{ gasto.categoria }}</td>
+                        <td><strong>Bs {{ gasto.monto|formato_moneda }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="background: var(--background); font-weight: 600;">
+                        <td colspan="2">Subtotal Gastos No Comunes</td>
+                        <td>Bs {{ resultado.gastos_no_comunes_total|formato_moneda }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Pagos Realizados -->
+        <div style="margin-bottom: 15px;">
+            <h3 style="margin-bottom: 6px;">Pagos Realizados</h3>
+            {% if resultado.detalle_pagos %}
+            <table class="tabla-principal">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Monto Original</th>
+                        <th>Moneda</th>
+                        <th>Tasa</th>
+                        <th>Monto en Bs</th>
+                        <th>Método</th>
+                        <th>Referencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pago in resultado.detalle_pagos %}
+                    <tr>
+                        <td>{{ pago.fecha|date:"d/m/Y" }}</td>
+                        <td>{{ pago.monto_original|formato_moneda }}</td>
+                        <td>{{ pago.moneda }}</td>
+                        <td>{{ pago.tasa_cambio|default:"N/A" }}</td>
+                        <td><strong>Bs {{ pago.monto_en_bs|formato_moneda }}</strong></td>
+                        <td>{{ pago.metodo }}</td>
+                        <td>{{ pago.referencia|default:"N/A" }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="background: var(--background); font-weight: 600;">
+                        <td colspan="6">Total Pagado</td>
+                        <td>Bs {{ resultado.total_pagado|formato_moneda }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color: var(--gray);">No hay pagos registrados</p>
+            {% endif %}
+        </div>
+
+        <!-- Resumen Final -->
+        <div class="resumen-final"
+            style="padding: 15px; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); color: white; border-radius: 8px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div>
+                    <p style="opacity: 0.9; margin-bottom: 2px; font-size: 9pt;">Total a Pagar:</p>
+                    <p class="monto-mediano" style="font-size: 16px; font-weight: 600; margin: 0;">Bs
+                        {{resultado.total_a_pagar|formato_moneda }}</p>
+                </div>
+                <div>
+                    <p style="opacity: 0.9; margin-bottom: 2px; font-size: 9pt;">Total Pagado:</p>
+                    <p class="monto-mediano" style="font-size: 16px; font-weight: 600; margin: 0;">Bs
+                        {{resultado.total_pagado|formato_moneda }}</p>
+                </div>
+            </div>
+            <div style="padding-top: 12px; border-top: 2px solid rgba(255,255,255,0.3);">
+                <p style="opacity: 0.9; margin-bottom: 2px; font-size: 9pt;">Saldo:</p>
+                <p class="monto-grande" style="font-size: 20px; font-weight: 700; margin: 0;">
+                    {% if resultado.saldo > 0 %}
+                    Bs {{ resultado.saldo|formato_moneda }} (DEUDA)
+                    {% elif resultado.saldo < 0 %}
+                    Bs {{ resultado.saldo_absoluto|formato_moneda }} (SALDO A FAVOR)
+                    {% else %}
+                    Bs 0,00 (AL DÍA)
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Pie de Página: Datos Bancarios -->
+        {% if datos_condominio %}
+        <div
+            style="margin-top: 20px; padding: 15px; background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px;">
+            <h3 style="margin: 0 0 10px 0; font-size: 11pt; color: var(--primary-dark); text-align: center;">💳 Datos
+                para Realizar Pagos</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 9pt;">
+                <div>
+                    <p style="margin: 3px 0;"><strong>Banco:</strong> Banco Nacional de Crédito (BNC)</p>
+                    <p style="margin: 3px 0;"><strong>Tipo de Cuenta:</strong> Cuenta Corriente</p>
+                    <p style="margin: 3px 0;"><strong>Contacto:</strong> {{datos_condominio.contacto_admin}}</p>
+                </div>
+                <div>
+                    <p style="margin: 3px 0;"><strong>Número de Cuenta:</strong> 0191-0057-0121-5704-4605</p>
+                    <p style="margin: 3px 0;"><strong>Titular:</strong> Junta de Condominio Santa Ana de Coro</p>
+                </div>
+            </div>
+
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

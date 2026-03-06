@@ -1,0 +1,52 @@
+{% extends 'nucleo/base_login.html' %}
+
+{% block content %}
+<div class="text-center mb-4">
+    <h1 class="h3 mb-3 font-weight-normal">Pregunta de Seguridad</h1>
+    <p class="text-muted">Hola <strong>{{ username }}</strong>, para verificar que eres tú, responde:</p>
+    <div class="alert alert-info">
+        <strong>{{ pregunta }}</strong>
+    </div>
+</div>
+
+<form method="post" class="user">
+    {% csrf_token %}
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="form-group">
+        <div style="position: relative;">
+            <input type="password" id="respuesta" name="respuesta" class="form-control form-control-user" placeholder="Escribe tu respuesta secreta" required autofocus style="padding-right: 40px;">
+            <span id="toggleRespuesta" style="position: absolute; right: 10px; top: 12px; cursor: pointer; user-select: none;">👁️</span>
+        </div>
+    </div>
+    
+    <script>
+        const toggleRespuesta = document.querySelector('#toggleRespuesta');
+        const respuesta = document.querySelector('#respuesta');
+
+        toggleRespuesta.addEventListener('click', function (e) {
+            const type = respuesta.getAttribute('type') === 'password' ? 'text' : 'password';
+            respuesta.setAttribute('type', type);
+            this.textContent = type === 'password' ? '👁️' : '🔒';
+        });
+    </script>
+
+    <button type="submit" class="btn btn-primary btn-user btn-block">
+        Verificar Respuesta
+    </button>
+    
+    <div class="text-center mt-3">
+        <a class="small" href="{% url 'nucleo:login' %}">Cancelar</a>
+    </div>
+</form>
+{% endblock %}

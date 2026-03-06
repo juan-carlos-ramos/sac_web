@@ -1,0 +1,89 @@
+{% extends 'nucleo/base.html' %}
+
+{% block title %}{{ titulo }} - {{ nombre_sistema }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header d-flex justify-between align-center">
+        <h2>{{ titulo }}</h2>
+        <a href="{% url 'nucleo:lista_inmuebles' %}" class="btn btn-volver">← Volver</a>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.numero_apto.id_for_label }}">{{ form.numero_apto.label }}</label>
+                {{ form.numero_apto }}
+                {% if form.numero_apto.help_text %}
+                <small>{{ form.numero_apto.help_text }}</small>
+                {% endif %}
+                {% if form.numero_apto.errors %}
+                <div class="alert alert-error mt-1">{{ form.numero_apto.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.propietario.id_for_label }}">{{ form.propietario.label }}</label>
+                {{ form.propietario }}
+                {% if form.propietario.help_text %}
+                <small>{{ form.propietario.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.documento_identidad.id_for_label }}">{{ form.documento_identidad.label }}</label>
+                {{ form.documento_identidad }}
+                {% if form.documento_identidad.help_text %}
+                <small>{{ form.documento_identidad.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                {{ form.email }}
+                {% if form.email.help_text %}
+                <small>{{ form.email.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>
+                {{ form.telefono }}
+                {% if form.telefono.help_text %}
+                <small>{{ form.telefono.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.alicuota.id_for_label }}">{{ form.alicuota.label }}</label>
+                {{ form.alicuota }}
+                {% if form.alicuota.help_text %}
+                <small>{{ form.alicuota.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.fecha_ingreso.id_for_label }}">{{ form.fecha_ingreso.label }}</label>
+                {{ form.fecha_ingreso }}
+                {% if form.fecha_ingreso.help_text %}
+                <small>{{ form.fecha_ingreso.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.notas.id_for_label }}">{{ form.notas.label }}</label>
+                {{ form.notas }}
+                {% if form.notas.help_text %}
+                <small>{{ form.notas.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="d-flex gap-1">
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <a href="{% url 'nucleo:lista_inmuebles' %}" class="btn btn-volver">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
