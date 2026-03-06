@@ -1,12 +1,12 @@
-# Sistema de Administración de Condominio (SAC WEB) 🏢
+# Sistema de Administración de Condominio SAC WEB
 
-> **Nota para Reclutadores:** Este repositorio contiene el proyecto final desarrollado como **Tesis de Grado**. Todo el código fuente es original. La base de datos contiene exclusivamente **datos ficticios (Mock Data)** por propósitos de demostración. Las credenciales y claves secretas han sido extraídas a variables de entorno para garantizar la seguridad.
+> **Nota para Reclutadores:** Este repositorio contiene el proyecto final desarrollado como **Tesis de Grado**. Todo el código fuente es original. La base de datos contiene exclusivamente **datos ficticios Mock Data** por propósitos de demostración. Las credenciales y claves secretas han sido extraídas a variables de entorno para garantizar la seguridad.
 
 **SAC WEB** es un sistema administrativo web completo diseñado para automatizar y gestionar condominios. Resuelve el problema matemático y logístico de la distribución justa de gastos comunes mediante el uso de "Alícuotas" (porcentaje de participación por tamaño de inmueble), automatizando cuentas por cobrar, facturación y la posterior emisión de comprobantes.
 
 ---
 
-## 🚀 Módulos Principales
+## Módulos Principales
 
 1. **Gestión de Inmuebles:** 
    *    Registro de las propiedades (Número, Propietario, Datos de contacto).
@@ -23,7 +23,7 @@
 
 ---
 
-## 🛠️ Stack Tecnológico
+## Stack Tecnológico
 
 *   **Backend / Framework:** Python 3, Django 6.0
 *   **Base de Datos:** SQLite (Configuración de demostración)
@@ -33,7 +33,7 @@
 
 ---
 
-## ⚙️ Estructura y Flujo de Datos
+## Estructura y Flujo de Datos
 
 El núcleo principal del software se enfoca en la eficiencia administrativa:
 ```mermaid
@@ -45,7 +45,7 @@ graph TD;
     E --> F[Emisión de Recibo en PDF];
 ```
 
-## 💻 Instalación Local (Entorno de Desarrollo)
+## Instalación Local - Entorno de Desarrollo
 
 Para levantar este proyecto en tu entorno de desarrollo local:
 
