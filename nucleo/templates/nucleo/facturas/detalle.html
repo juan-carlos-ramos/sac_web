@@ -56,10 +56,11 @@
                     </td>
                     <td class="acciones">
                         {% if perms.nucleo.delete_gasto %}
-                        <a href="{% url 'nucleo:eliminar_gasto' gasto.id %}" class="btn btn-borrar btn-sm"
-                            onclick="return confirm('¿Está seguro de eliminar este gasto?')">
-                            Eliminar
-                        </a>
+                        <form action="{% url 'nucleo:eliminar_gasto' gasto.id %}" method="POST" style="display:inline;"
+                            onsubmit="return confirm('¿Está seguro de eliminar este gasto?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-borrar btn-sm">Eliminar</button>
+                        </form>
                         {% endif %}
                     </td>
                 </tr>
@@ -398,7 +399,18 @@ document.addEventListener('click', function(e) {
                 .then(data => {
                     if (data.success) {
                         tbody.innerHTML = '';
+                        function escapeHtml(str) {
+                            if (str === null || str === undefined) return '';
+                            return String(str)
+                                .replace(/&/g, '&amp;')
+                                .replace(/</g, '&lt;')
+                                .replace(/>/g, '&gt;')
+                                .replace(/"/g, '&quot;')
+                                .replace(/'/g, '&#039;');
+                        }
                         data.inmuebles.forEach(item => {
+                            const safeApto = escapeHtml(item.apto);
+                            const safePropietario = escapeHtml(item.propietario);
                             const badgeClass = item.es_solvente ? 'badge-solvente' : 'badge-deudor';
                             const estadoTexto = item.es_solvente ? 'SOLVENTE' : 'DEUDOR';
                             
@@ -422,8 +434,8 @@ document.addEventListener('click', function(e) {
                             }
                             
                             const row = `<tr>
-                                <td><strong>${item.apto}</strong></td>
-                                <td><small>${item.propietario}</small></td>
+                                <td><strong>${safeApto}</strong></td>
+                                <td><small>${safePropietario}</small></td>
                                 <td>Bs ${item.total_a_pagar.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                                 <td>Bs ${item.total_pagado.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                                 <td>${deudaHtml}</td>
@@ -465,35 +477,8 @@ document.addEventListener('click', function(e) {
             });
         });
         
-        // Filtro de búsqueda para Recibos por Inmueble
-        const searchRecibo = document.getElementById('buscar-recibo');
-        if (searchRecibo) {
-            // Función para quitar acentos
-            function quitarAcentos(texto) {
-                return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            }
-            
-            searchRecibo.addEventListener('input', function() {
-                const filtro = quitarAcentos(this.value.toLowerCase().trim());
-                const filasRecibos = document.querySelectorAll('#tabla-recibos tbody tr');
-                
-                // Si no hay filtro, mostrar todas
-                if (!filtro) {
-                    filasRecibos.forEach(fila => fila.style.display = '');
-                    return;
-                }
-                
-                // Dividir el filtro en palabras
-                const palabras = filtro.split(/\s+/);
-                
-                filasRecibos.forEach(fila => {
-                    const texto = quitarAcentos(fila.textContent.toLowerCase());
-                    // Verificar que TODAS las palabras estén en la fila
-                    const coincide = palabras.every(palabra => texto.includes(palabra));
-                    fila.style.display = coincide ? '' : 'none';
-                });
-            });
-        }
+// Filtro de búsqueda para Recibos por Inmueble
+        inicializarBusqueda('buscar-recibo', 'tabla-recibos');
     });
 </script>
 {% endblock %}

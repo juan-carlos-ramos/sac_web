@@ -143,16 +143,19 @@ a:hover {
     font-size: 13px;
 }
 
-.navbar-user a {
+.navbar-user a, .navbar-user button {
     color: var(--white);
     padding: 5px 8px;
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.1);
     transition: background var(--transition-fast);
     font-size: 12px;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
 }
 
-.navbar-user a:hover {
+.navbar-user a:hover, .navbar-user button:hover {
     background: rgba(255, 255, 255, 0.2);
     color: var(--white);
 }

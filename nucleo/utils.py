@@ -544,3 +544,18 @@ def obtener_notificaciones_no_leidas(usuario):
         usuario=usuario,
         leida=False
     ).order_by('-fecha_creacion')
+
+
+def sanitizar_para_excel(valor):
+    """
+    Sanitiza cadenas de texto para prevenir ataques de Formula Injection (CSV/Excel Injection).
+    Si el valor de texto comienza con '=', '+', '-', '@', tabulación o retorno de carro,
+    antepone un apóstrofe (') para forzar su interpretación como texto literal.
+    """
+    if valor is None:
+        return ""
+    str_val = str(valor)
+    if str_val.startswith(('=', '+', '-', '@', '\t', '\r')):
+        return f"'{str_val}"
+    return str_val
+

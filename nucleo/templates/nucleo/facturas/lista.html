@@ -49,7 +49,7 @@
             </thead>
             <tbody>
                 {% for factura in facturas %}
-                <tr data-mes-num="{{ factura.periodo|slice:'-2:' }}" data-mes="{% with mes=factura.periodo|slice:'-2:' %}{% if mes == '01' %}enero{% elif mes == '02' %}febrero{% elif mes == '03' %}marzo{% elif mes == '04' %}abril{% elif mes == '05' %}mayo{% elif mes == '06' %}junio{% elif mes == '07' %}julio{% elif mes == '08' %}agosto{% elif mes == '09' %}septiembre{% elif mes == '10' %}octubre{% elif mes == '11' %}noviembre{% elif mes == '12' %}diciembre{% endif %}{% endwith %}">
+                <tr>
                     <td><strong>{{ factura.periodo }}</strong></td>
                     <td>{{ factura.creada_en|date:"d/m/Y H:i" }}</td>
                     <td class="acciones">
@@ -92,45 +92,7 @@ document.addEventListener('click', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('buscar-factura');
-    if (searchInput) {
-        // Función para quitar acentos
-        function quitarAcentos(texto) {
-            return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        }
-        
-        searchInput.addEventListener('input', function() {
-            const filtro = quitarAcentos(this.value.toLowerCase().trim());
-            const filas = document.querySelectorAll('#tabla-facturas tbody tr');
-            
-            // Si no hay filtro, mostrar todas
-            if (!filtro) {
-                filas.forEach(fila => fila.style.display = '');
-                return;
-            }
-            
-            // Dividir el filtro en palabras
-            const palabras = filtro.split(/\s+/);
-            
-            filas.forEach(fila => {
-                // Incluir contenido + nombre del mes
-                const textoFila = quitarAcentos(fila.textContent.toLowerCase());
-                const mesFila = fila.getAttribute('data-mes') || '';
-                const mesNumFila = fila.getAttribute('data-mes-num') || '';
-                
-                // Verificar que TODAS las palabras estén
-                const coincide = palabras.every(palabra => {
-                    // Si es un número de mes (01-12), buscar exactamente en el mes
-                    if (/^(0[1-9]|1[0-2])$/.test(palabra)) {
-                        return mesNumFila === palabra;
-                    }
-                    // Si no, buscar en todo el texto + nombre del mes
-                    return (textoFila + ' ' + mesFila).includes(palabra);
-                });
-                fila.style.display = coincide ? '' : 'none';
-            });
-        });
-    }
+    inicializarBusqueda('buscar-factura', 'tabla-facturas');
 });
 </script>
 {% endblock %}

@@ -47,14 +47,19 @@
                         <a href="{% url 'nucleo:editar_usuario' usuario.id %}" class="btn btn-editar btn-sm">Editar</a>
                         <a href="{% url 'nucleo:cambiar_password_usuario' usuario.id %}" class="btn btn-info btn-sm">🔑 Password</a>
                         {% if usuario.id != user.id %}
-                        <a href="{% url 'nucleo:toggle_usuario_activo' usuario.id %}" class="btn btn-sm {% if usuario.is_active %}btn-warning{% else %}btn-success{% endif %}"
-                            onclick="return confirm('¿Está seguro de {% if usuario.is_active %}desactivar{% else %}activar{% endif %} a {{ usuario.username }}?')">
-                            {% if usuario.is_active %}Desactivar{% else %}Activar{% endif %}
-                        </a>
-                        <a href="{% url 'nucleo:eliminar_usuario' usuario.id %}" class="btn btn-borrar btn-sm"
-                            onclick="return confirm('¿Está seguro de eliminar a {{ usuario.username }}? Esta acción no se puede deshacer.')">
-                            Eliminar
-                        </a>
+                        <form action="{% url 'nucleo:toggle_usuario_activo' usuario.id %}" method="POST" style="display:inline;"
+                            onsubmit="return confirm('¿Está seguro de {% if usuario.is_active %}desactivar{% else %}activar{% endif %} a {{ usuario.username }}?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm {% if usuario.is_active %}btn-warning{% else %}btn-success{% endif %}">
+                                {% if usuario.is_active %}Desactivar{% else %}Activar{% endif %}
+                            </button>
+                        </form>
+                        
+                        <form action="{% url 'nucleo:eliminar_usuario' usuario.id %}" method="POST" style="display:inline;"
+                            onsubmit="return confirm('¿Está seguro de eliminar a {{ usuario.username }}? Esta acción no se puede deshacer.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-borrar btn-sm">Eliminar</button>
+                        </form>
                         {% endif %}
                     </td>
                 </tr>

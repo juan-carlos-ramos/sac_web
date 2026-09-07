@@ -21,14 +21,50 @@ load_dotenv()
 # =============================================================================
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'dummy-secret-key-for-dev')
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY and not os.environ.get('SKIP_ENV_VALIDATION'):
+    raise ValueError("La variable de entorno SECRET_KEY no está configurada. Por seguridad, el sistema no puede iniciar.")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+# Por defecto False para evitar exposición accidental en producción
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-# En desarrollo dejamos ALLOWED_HOSTS vacío
-# Django permite localhost y 127.0.0.1 automáticamente cuando DEBUG=True
-ALLOWED_HOSTS = []
+# Configuración de hosts permitidos desde variables de entorno
+allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', '')
+if allowed_hosts_env:
+    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',')]
+else:
+    # En desarrollo (DEBUG=True), permitimos localhost por defecto si no hay variable
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1'] if DEBUG else []
+
+# =============================================================================
+# SEGURIDAD HTTP Y SESIONES
+# =============================================================================
+SECURE_REFERRER_POLICY = 'same-origin'
+SESSION_COOKIE_AGE = int(os.environ.get('SESSION_COOKIE_AGE', 86400))  # 24 horas por defecto
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_HTTPONLY = True
+
+if not DEBUG:
+    # Forzar HTTPS
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False').lower() == 'true'
+    # HSTS (Strict-Transport-Security)
+    SECURE_HSTS_SECONDS = 31536000 # 1 año
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+    # Protección contra sniffing de contenido
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    # Protección contra XSS en navegadores antiguos
+    SECURE_BROWSER_XSS_FILTER = True
+    # Evitar que el sitio sea enmarcado (Clickjacking)
+    X_FRAME_OPTIONS = 'DENY'
+    
+    # Cookies seguras
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = True
+
 
 
 # =============================================================================

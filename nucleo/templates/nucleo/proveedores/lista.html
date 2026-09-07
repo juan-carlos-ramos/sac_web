@@ -36,10 +36,11 @@
                         {% endif %}
                         
                         {% if perms.nucleo.delete_proveedor %}
-                        <a href="{% url 'nucleo:eliminar_proveedor' proveedor.id %}" class="btn btn-borrar btn-sm"
-                            onclick="return confirm('¿Está seguro de eliminar el proveedor {{ proveedor.nombre }}?')">
-                            Eliminar
-                        </a>
+                        <form action="{% url 'nucleo:eliminar_proveedor' proveedor.id %}" method="POST" style="display:inline;"
+                            onsubmit="return confirm('¿Está seguro de eliminar el proveedor {{ proveedor.nombre }}?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-borrar btn-sm">Eliminar</button>
+                        </form>
                         {% endif %}
                     </td>
                 </tr>

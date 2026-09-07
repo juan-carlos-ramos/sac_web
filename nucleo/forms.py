@@ -240,6 +240,20 @@ class PagoForm(forms.ModelForm):
             'referencia': 'Obligatorio para transferencias y pago móvil',
         }
 
+    def clean_comprobante(self):
+        comprobante = self.cleaned_data.get('comprobante')
+        if comprobante and hasattr(comprobante, 'size'):
+            # Límite de 5MB por archivo
+            max_size_mb = 5
+            if comprobante.size > max_size_mb * 1024 * 1024:
+                raise forms.ValidationError(f"El comprobante no debe superar los {max_size_mb} MB.")
+            
+            # Validar extensión permitida
+            extension = comprobante.name.split('.')[-1].lower() if '.' in comprobante.name else ''
+            if extension not in ['jpg', 'jpeg', 'png', 'pdf']:
+                raise forms.ValidationError("Solo se permiten archivos en formato JPG, PNG o PDF.")
+        return comprobante
+
 
 # =============================================================================
 # FORMULARIO: Datos del Condominio
@@ -284,6 +298,7 @@ class DatosCondominioForm(forms.ModelForm):
 
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, SetPasswordForm
+from django.contrib.auth.hashers import make_password
 
 
 class CrearUsuarioForm(UserCreationForm):
@@ -354,8 +369,6 @@ class CrearUsuarioForm(UserCreationForm):
     
     class Meta:
         model = User
-    class Meta:
-        model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'is_staff', 'groups', 'pregunta_seguridad', 'respuesta_seguridad']
         widgets = {
             'username': forms.TextInput(attrs={
@@ -392,11 +405,11 @@ class CrearUsuarioForm(UserCreationForm):
         
         if commit:
             user.save()
-            # Crear perfil con preguntas de seguridad
+            # Crear perfil con preguntas de seguridad (hasheando la respuesta)
             PerfilUsuario.objects.create(
                 usuario=user,
                 pregunta_seguridad=self.cleaned_data['pregunta_seguridad'],
-                respuesta_seguridad=self.cleaned_data['respuesta_seguridad']
+                respuesta_seguridad=make_password(self.cleaned_data['respuesta_seguridad'].strip().lower())
             )
         return user
 

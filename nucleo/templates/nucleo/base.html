@@ -48,7 +48,10 @@
             </div>
             <span>👤 {{ user.username }}</span>
             <a href="{% url 'nucleo:cambiar_password' %}">🔑 Cambiar Contraseña</a>
-            <a href="{% url 'nucleo:logout' %}">🚪 Salir</a>
+            <form action="{% url 'nucleo:logout' %}" method="POST" style="display:inline; margin:0;">
+                {% csrf_token %}
+                <button type="submit">🚪 Salir</button>
+            </form>
         </div>
         {% endif %}
     </nav>
@@ -130,6 +133,9 @@
     <footer style="text-align: center; padding: 20px; color: var(--gray); margin-top: 40px;">
         <p>&copy; 2026 {{ nombre_sistema }} - {{ nombre_completo }}</p>
     </footer>
+
+    <!-- JavaScript Global -->
+    <script src="{% static 'js/busqueda.js' %}"></script>
 
     <!-- JavaScript adicional por página -->
     {% block extra_js %}{% endblock %}

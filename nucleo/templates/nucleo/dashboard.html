@@ -116,6 +116,10 @@
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+{{ chart_pagos_labels|json_script:"chart-pagos-labels" }}
+{{ chart_pagos_data|json_script:"chart-pagos-data" }}
+{{ chart_deudas_data|json_script:"chart-deudas-data" }}
+
 <script>
 // =========================================================================
 // CONFIGURACIÓN DE GRÁFICOS CON CHART.JS
@@ -131,16 +135,28 @@ const colors = {
     gray: '#6c757d',
 };
 
+function getJsonData(id) {
+    const el = document.getElementById(id);
+    if (!el) return [];
+    try {
+        return JSON.parse(el.textContent || '[]');
+    } catch (e) {
+        return [];
+    }
+}
+
 // GRÁFICO 1: Evolución de Pagos
 const chartPagosCtx = document.getElementById('chartPagos');
 if (chartPagosCtx) {
+    const pagosLabels = getJsonData('chart-pagos-labels');
+    const pagosData = getJsonData('chart-pagos-data');
     new Chart(chartPagosCtx, {
         type: 'line',
         data: {
-            labels: {{ chart_pagos_labels|safe|default:"[]" }},
+            labels: pagosLabels,
             datasets: [{
                 label: 'Recaudación (Bs)',
-                data: {{ chart_pagos_data|safe|default:"[]" }},
+                data: pagosData,
                 borderColor: colors.primary,
                 backgroundColor: colors.primary + '20',
                 borderWidth: 2,
@@ -180,7 +196,7 @@ if (chartPagosCtx) {
 // GRÁFICO 2: Deuda por Inmueble
 const chartDeudasCtx = document.getElementById('chartDeudas');
 if (chartDeudasCtx) {
-    const deudasData = {{ chart_deudas_data|safe|default:"[]" }};
+    const deudasData = getJsonData('chart-deudas-data');
     new Chart(chartDeudasCtx, {
         type: 'bar',
         data: {

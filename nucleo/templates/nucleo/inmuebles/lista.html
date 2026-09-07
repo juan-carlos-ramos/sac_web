@@ -76,10 +76,11 @@
                         {% endif %}
                         
                         {% if perms.nucleo.delete_inmueble %}
-                        <a href="{% url 'nucleo:eliminar_inmueble' inmueble.id %}" class="btn btn-borrar btn-sm"
-                            onclick="return confirm('¿Está seguro de eliminar el inmueble {{ inmueble.numero_apto }}?')">
-                            Eliminar
-                        </a>
+                        <form action="{% url 'nucleo:eliminar_inmueble' inmueble.id %}" method="POST" style="display:inline;"
+                            onsubmit="return confirm('¿Está seguro de eliminar el inmueble {{ inmueble.numero_apto }}?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-borrar btn-sm">Eliminar</button>
+                        </form>
                         {% endif %}
                     </td>
                 </tr>
@@ -102,42 +103,7 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('buscar-inmueble');
-    if (searchInput) {
-        // Función para quitar acentos
-        function quitarAcentos(texto) {
-            return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        }
-        
-        searchInput.addEventListener('input', function() {
-            const filtro = quitarAcentos(this.value.toLowerCase().trim());
-            const filas = document.querySelectorAll('#tabla-inmuebles tbody tr');
-            
-            // Si no hay filtro, mostrar todas
-            if (!filtro) {
-                filas.forEach(fila => fila.style.display = '');
-                return;
-            }
-            
-            // Dividir el filtro en palabras
-            const palabras = filtro.split(/\s+/);
-            
-            filas.forEach(fila => {
-                const texto = quitarAcentos(fila.textContent.toLowerCase());
-                // Verificar que TODAS las palabras estén en la fila
-                // Para números cortos (1-2 dígitos), buscar como palabra completa
-                const coincide = palabras.every(palabra => {
-                    if (/^\d{1,2}$/.test(palabra)) {
-                        // Número corto: buscar con límites de palabra
-                        const regex = new RegExp('\\b' + palabra + '\\b');
-                        return regex.test(texto);
-                    }
-                    return texto.includes(palabra);
-                });
-                fila.style.display = coincide ? '' : 'none';
-            });
-        });
-    }
+    inicializarBusqueda('buscar-inmueble', 'tabla-inmuebles');
 });
 </script>
 {% endblock %}

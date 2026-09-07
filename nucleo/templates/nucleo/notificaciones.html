@@ -8,9 +8,12 @@
         <h2>Mis Notificaciones</h2>
         <div class="d-flex gap-1">
             {% if notificaciones %}
-            <a href="{% url 'nucleo:marcar_todas_leidas' %}" class="btn btn-success">
-                ✓ Marcar todas como leídas
-            </a>
+            <form action="{% url 'nucleo:marcar_todas_leidas' %}" method="POST" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">
+                    ✓ Marcar todas como leídas
+                </button>
+            </form>
             {% endif %}
             <a href="{% url 'nucleo:dashboard' %}" class="btn btn-volver">
                 ← Volver
@@ -41,9 +44,12 @@
                     </span>
                 </div>
                 {% if not notificacion.leida %}
-                <a href="{% url 'nucleo:marcar_notificacion_leida' notificacion.id %}" class="btn btn-success btn-sm">
-                    Marcar como leída
-                </a>
+                <form action="{% url 'nucleo:marcar_notificacion_leida' notificacion.id %}" method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-sm">
+                        Marcar como leída
+                    </button>
+                </form>
                 {% endif %}
             </div>
             {% endfor %}

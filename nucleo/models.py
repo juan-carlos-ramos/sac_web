@@ -5,6 +5,7 @@ Sistema de Administración de Condominio
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import FileExtensionValidator
 
 
 # =============================================================================
@@ -383,6 +384,7 @@ class Pago(models.Model):
         upload_to='comprobantes/',
         blank=True,
         null=True,
+        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'pdf'])],
         verbose_name='Comprobante',
         help_text='Imagen o PDF del comprobante de pago'
     )
@@ -681,9 +683,9 @@ class PerfilUsuario(models.Model):
     )
     
     respuesta_seguridad = models.CharField(
-        max_length=200,
-        verbose_name='Respuesta',
-        help_text='Respuesta para recuperar contraseña'
+        max_length=255,
+        verbose_name='Respuesta (Hashed)',
+        help_text='Hash de la respuesta para recuperar contraseña'
     )
     
     class Meta:

@@ -64,34 +64,7 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('buscar-pago');
-    if (searchInput) {
-        // Función para quitar acentos
-        function quitarAcentos(texto) {
-            return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        }
-        
-        searchInput.addEventListener('input', function() {
-            const filtro = quitarAcentos(this.value.toLowerCase().trim());
-            const filas = document.querySelectorAll('#tabla-pagos tbody tr');
-            
-            // Si no hay filtro, mostrar todas
-            if (!filtro) {
-                filas.forEach(fila => fila.style.display = '');
-                return;
-            }
-            
-            // Dividir el filtro en palabras
-            const palabras = filtro.split(/\s+/);
-            
-            filas.forEach(fila => {
-                const texto = quitarAcentos(fila.textContent.toLowerCase());
-                // Verificar que TODAS las palabras estén en la fila
-                const coincide = palabras.every(palabra => texto.includes(palabra));
-                fila.style.display = coincide ? '' : 'none';
-            });
-        });
-    }
+    inicializarBusqueda('buscar-pago', 'tabla-pagos');
 });
 </script>
 {% endblock %}
