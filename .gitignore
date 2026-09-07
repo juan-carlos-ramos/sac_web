@@ -99,3 +99,7 @@ desktop.ini
 .vscode/
 .agent/
 .gemini/
+.codex/
+AI_CONTEXT.md
+docs/AI_CONTEXT.md
+*AI_CONTEXT*

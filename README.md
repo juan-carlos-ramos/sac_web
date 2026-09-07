@@ -217,7 +217,6 @@ La documentación detallada del sistema se encuentra centralizada en el director
 * 💰 [**Lógica Financiera y Alícuotas**](docs/LOGICA_FINANCIERA.md): Fórmulas matemáticas de prorrateo, reservas y cuentas por cobrar.
 * 🛡️ [**Informe de Seguridad SAST**](docs/AUDITORIA_SEGURIDAD.md): Análisis forense y matriz de mitigación de vulnerabilidades OWASP Top 10.
 * 💾 [**Guía de Migración de Servidor/PC**](docs/GUIA_MIGRACION.md): Procedimiento para respaldar y trasladar el sistema entre equipos.
-* 🤖 [**Ficha de Contexto para IA**](docs/AI_CONTEXT.md): Resumen arquitectónico para interacción con asistentes de IA.
 
 ---
 
