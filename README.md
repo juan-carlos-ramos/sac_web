@@ -163,7 +163,7 @@ python manage.py runserver 0.0.0.0:8000
 
 ```text
 sac_web/
-├── documentacion/          # Especificaciones funcionales y diagramas
+├── docs/                   # Documentación técnica, arquitectura, manuales y guías
 ├── nucleo/                 # Aplicación principal del sistema
 │   ├── migrations/         # Esquemas y migraciones de base de datos
 │   ├── templates/          # Plantillas semánticas HTML5 (Django Templates)
@@ -208,7 +208,21 @@ python -m unittest discover tests
 
 ---
 
+## 📚 Documentación Técnica & Guías
+
+La documentación detallada del sistema se encuentra centralizada en el directorio [`docs/`](docs/):
+
+* 📖 [**Manual de Usuario Completo**](docs/MANUAL_USUARIO.md): Guía exhaustiva paso a paso para la operación de cada módulo administrativo.
+* 📐 [**Diseño y Arquitectura del Sistema**](docs/DISENO_DEL_SISTEMA.md): Especificación técnica de componentes, patrones y arquitectura.
+* 💰 [**Lógica Financiera y Alícuotas**](docs/LOGICA_FINANCIERA.md): Fórmulas matemáticas de prorrateo, reservas y cuentas por cobrar.
+* 🛡️ [**Informe de Seguridad SAST**](docs/AUDITORIA_SEGURIDAD.md): Análisis forense y matriz de mitigación de vulnerabilidades OWASP Top 10.
+* 💾 [**Guía de Migración de Servidor/PC**](docs/GUIA_MIGRACION.md): Procedimiento para respaldar y trasladar el sistema entre equipos.
+* 🤖 [**Ficha de Contexto para IA**](docs/AI_CONTEXT.md): Resumen arquitectónico para interacción con asistentes de IA.
+
+---
+
 ## 📄 Licencia
 
 Este proyecto está distribuido bajo la licencia **MIT**. Consulte el archivo `LICENSE` para obtener más información.
+
 

@@ -1,8 +1,8 @@
-# 📐 DISEÑO DEL SISTEMA
+# 📐 DISEÑO Y ARQUITECTURA DEL SISTEMA
 
 ## Sistema de Administración de Condominios (SAC WEB)
 
-**Proyecto de Tesis - UNEXCA 2026**
+**Documento de Arquitectura y Especificación Técnica**
 
 ---
 

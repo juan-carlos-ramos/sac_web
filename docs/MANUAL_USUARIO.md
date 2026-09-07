@@ -3,8 +3,7 @@
 
 **Versión:** 1.0  
 **Fecha:** Enero 2026  
-**Desarrollado para:** Condominio Santa Ana de Coro  
-**Proyecto de Tesis:** Universidad [Nombre]
+**Sistema:** SAC WEB — Gestión Administrativa de Condominios
 
 ---
 
